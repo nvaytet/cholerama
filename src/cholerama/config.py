@@ -8,7 +8,7 @@ class Config:
     nx: int = 400
     ny: int = 400
     fps: int = 30
-    iterations: int = 1000
+    iterations: int = 100
     pattern_size: int = 14
 
 

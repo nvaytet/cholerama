@@ -286,6 +286,9 @@ class GraphicalEngine(Engine):
 
     def update(self):
         self.niter += 1
+        if self.niter >= config.iterations:
+            self.timer.stop()
+            return
         super().update(self.niter)
         self.graphics.update(self.board, histories=self.player_histories)
 
