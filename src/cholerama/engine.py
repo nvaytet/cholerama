@@ -17,17 +17,37 @@ class Engine:
         safe: bool = False,
         test: bool = True,
         seed: Optional[int] = None,
+        fps: Optional[int] = 10,
     ):
         if seed is not None:
             np.random.seed(seed)
 
-        self.nx = config.nx
-        self.ny = config.ny
         self.start_time = None
         self._test = test
         self.asteroids = []
         self.safe = safe
         self.exiting = False
+        self.fps = fps
+
+        self.board = np.zeros((config.ny, config.nx), dtype=int)
+
+        pattern2 = np.array([[0, 1, 0], [0, 0, 1], [1, 1, 1]])
+        # pattern2 = np.array([[0, 0, 0], [1, 1, 1], [0, 0, 0]])
+        self.board[50:53, 50:53] = pattern2
+
+        self.xoff = [-1, 0, 1, -1, 1, -1, 0, 1]
+        self.yoff = [-1, -1, -1, 0, 0, 1, 1, 1]
+        self.xinds = np.empty((8,) + self.board.shape, dtype=int)
+        self.yinds = np.empty_like(self.xinds)
+
+        for i, (xo, yo) in enumerate(zip(self.xoff, self.yoff)):
+            g = np.meshgrid(
+                (np.arange(config.nx) + xo) % config.nx,
+                (np.arange(config.ny) + yo) % config.ny,
+                indexing="xy",
+            )
+            self.xinds[i, ...] = g[0]
+            self.yinds[i, ...] = g[1]
 
     # def execute_player_bot(self, player, t: float, dt: float):
     #     instructions = None
@@ -66,57 +86,30 @@ class Engine:
     #             )
 
     def evolve_board(self):
-        neighbors = board[yinds, xinds]
+        neighbors = self.board[self.yinds, self.xinds]
         neighbor_count = np.clip(neighbors, 0, 1).sum(axis=0)
         birth_values = np.nan_to_num(
             np.nanmedian(np.where(neighbors == 0, np.nan, neighbors), axis=0),
             copy=False,
         ).astype(int)
 
-        alive_mask = board > 0
+        alive_mask = self.board > 0
         alive_neighbor_count = np.where(alive_mask, neighbor_count, 0)
         # Apply rules
-        out = np.where(
-            (alive_neighbor_count == 2) | (alive_neighbor_count == 3), board, 0
+        new = np.where(
+            (alive_neighbor_count == 2) | (alive_neighbor_count == 3), self.board, 0
         )
         birth_mask = ~alive_mask & (neighbor_count == 3)
         # out[birth_mask] = 1
-        out = np.where(birth_mask, birth_values, out)
-        return out
+        self.board = np.where(birth_mask, birth_values, new)
 
     def shutdown(self):
         self.update_scoreboard()
         write_times({team: p.trip_time for team, p in self.players.items()})
         self.buffers["all_shutdown"][self.pid] = True
 
-    def update(self):
-
-        clock_time = time.time()
-        t = clock_time - self.start_time
-        dt = clock_time - self.previous_clock_time
-
-        if dt > self.update_interval:
-            dt = dt * config.seconds_to_hours
-
-            if (clock_time - self.last_time_update) > config.time_update_interval:
-                self.update_scoreboard()
-                self.last_time_update = clock_time
-
-            if (
-                clock_time - self.last_forecast_update
-            ) > config.weather_update_interval:
-                self.forecast = self.weather.get_forecast(t)
-                self.last_forecast_update = clock_time
-
-            self.call_player_bots(t=t * config.seconds_to_hours, dt=dt)
-            self.move_players(self.weather, t=t, dt=dt)
-            self.weather.update_wind_tracers(t=np.array([t]), dt=dt)
-
-            if len(self.players_not_arrived) == 0:
-                self.buffers["all_arrived"][self.pid] = True
-                self.update_scoreboard()
-
-            self.previous_clock_time = clock_time
+    def update(self, it: int):
+        self.evolve_board()
 
     def update_scoreboard(self):
 
@@ -131,8 +124,11 @@ class Engine:
                 dtype=float,
             )
 
-    def run(self, start_time: float):
-        self.initialize_time(start_time)
-        while not self.buffers["game_flow"][1]:
-            self.update()
+    def run(self):
+        # self.initialize_time(start_time)
+        pause = 1 / self.fps if self.fps is not None else None
+        for it in config.iterations:
+            self.update(it)
+            if pause is not None:
+                time.sleep(pause)
         self.shutdown()

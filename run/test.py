@@ -13,4 +13,5 @@ for repo in glob.glob("*_bot"):
 cholerama.play(
     bots=bots,  # List of bots to use
     test=True,  # Set to True to run in test mode
+    fps=10,  # Frames per second
 )
