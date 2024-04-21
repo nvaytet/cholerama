@@ -50,15 +50,19 @@ from .engine import Engine
 
 
 class Graphics:
-    def __init__(self, board, nplayers: int):
+    def __init__(self, board, player_histories):
         # t0 = time.time()
         # print("Composing graphics...", end=" ", flush=True)
         self.app = pg.mkQApp("Cholerama")
         self.window = pg.GraphicsLayoutWidget()
         self.window.setWindowTitle("Cholerama")
         self.window.setBackground("#1a1a1a")
-        self.view = self.window.addViewBox()
-        self.view.setAspectLocked(True)
+        self.left_view = self.window.addViewBox(None, col=0)
+        self.left_view.setAspectLocked(True)
+
+        nplayers = len(player_histories)
+
+        # self.canvas.nextRow()
 
         # self.cmap = mcolors.ListedColormap(
         #     ["dimgray"] + [f"C{i}" for i in range(nplayers)]
@@ -68,9 +72,32 @@ class Graphics:
         )
 
         self.image = pg.ImageItem(image=self.cmap(board))
-        self.view.addItem(self.image)
+        self.left_view.addItem(self.image)
 
-        # self.view.setRange(
+        # self.right_view = self.window.addViewBox(1, 2)
+        self.right_view = self.window.addPlot(row=None, col=1)
+        # self.right_view.setAspectLocked(True)
+
+        # self.plot = self.right_view.addPlot(0, 0, 1, 1)
+        self.lines = []
+        self.xhistory = np.arange(config.iterations)
+        for i in range(nplayers):
+            self.lines.append(
+                self.right_view.plot(
+                    # self.xhistory, player_histories[i], pen=mcolors.to_hex(f"C{i}")
+                    player_histories[i],
+                    self.xhistory,
+                    pen=mcolors.to_hex(f"C{i}"),
+                )
+            )
+        # plotpen = pg.mkPen(color='k', width=2)
+        # upperplot.plot(first_time, first_record, pen=plotpen)
+
+        # self.window.ci.layout.setRowStretchFactor(0, 4)
+        self.window.ci.layout.setColumnMaximumWidth(1, 300)
+        # self.window.ci.layout.setCol
+
+        # self.left_view.setRange(
         #     xRange=[
         #         config.room_image_size,
         #         config.room_image_size * (config.board_size + 1),
@@ -86,9 +113,11 @@ class Graphics:
 
         return
 
-    def update(self, board):
+    def update(self, board, histories):
 
         self.image.setImage(self.cmap(board))
+        for i, hist in enumerate(histories):
+            self.lines[i].setData(hist[:], self.xhistory)
 
 
 class GraphicalEngine(Engine):
@@ -96,7 +125,7 @@ class GraphicalEngine(Engine):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.graphics = Graphics(self.board, nplayers=len(self.bots))
+        self.graphics = Graphics(self.board, player_histories=self.player_histories)
         self.niter = 0
         print("self.fps", self.fps)
 
@@ -258,7 +287,7 @@ class GraphicalEngine(Engine):
     def update(self):
         self.niter += 1
         super().update(self.niter)
-        self.graphics.update(self.board)
+        self.graphics.update(self.board, histories=self.player_histories)
 
     # def run(self):
     #     # self.timer = QtCore.QTimer()

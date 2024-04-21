@@ -11,12 +11,12 @@ class Player:
         self.name = name
         self.number = number
         self.ncells = np.sum(pattern > 0)
-        self.cell_history = []
+        self.history = []
 
     def update(self, board: np.ndarray):
         self.ncells = np.sum(board == self.number)
-        self.cell_history.append(self.ncells)
-        print(self.name, self.ncells)
+        # self.history.append(self.ncells)
+        # print(self.name, self.ncells)
 
     # @property
     # def coverage(self):

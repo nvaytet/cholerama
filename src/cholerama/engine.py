@@ -32,12 +32,17 @@ class Engine:
         self.bots = {bot.name: bot for bot in bots}
         starting_positions = self.make_starting_positions()
         self.players = {}
+        self.player_histories = np.zeros((len(self.bots), config.iterations))
         for i, (bot, pos) in enumerate(zip(self.bots.values(), starting_positions)):
             p = bot.pattern
             self.board[pos[1] : pos[1] + p.shape[0], pos[0] : pos[0] + p.shape[1]] = (
                 p * (i + 1)
             )
-            self.players[bot.name] = Player(name=bot.name, number=i + 1, pattern=p)
+            player = Player(name=bot.name, number=i + 1, pattern=p)
+            self.players[bot.name] = player
+            self.player_histories[i, 0] = player.ncells
+
+        # self.player_histories = np.zeros((len(self.players), config.iterations))
 
         self.xoff = [-1, 0, 1, -1, 1, -1, 0, 1]
         self.yoff = [-1, -1, -1, 0, 0, 1, 1, 1]
@@ -128,8 +133,9 @@ class Engine:
 
     def update(self, it: int):
         self.evolve_board()
-        for player in self.players.values():
+        for i, player in enumerate(self.players.values()):
             player.update(self.board)
+            self.player_histories[i, it] = player.ncells
             # player.ncells = np.sum(self.board == player.number)
 
     def run(self):
