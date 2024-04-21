@@ -56,9 +56,13 @@ class Graphics:
         self.app = pg.mkQApp("Cholerama")
         self.window = pg.GraphicsLayoutWidget()
         self.window.setWindowTitle("Cholerama")
+        self.window.setBackground("#1a1a1a")
         self.view = self.window.addViewBox()
         self.view.setAspectLocked(True)
 
+        # self.cmap = mcolors.ListedColormap(
+        #     ["dimgray"] + [f"C{i}" for i in range(nplayers)]
+        # )
         self.cmap = mcolors.ListedColormap(
             ["black"] + [f"C{i}" for i in range(nplayers)]
         )
@@ -92,8 +96,11 @@ class GraphicalEngine(Engine):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.graphics = Graphics(self.board, len(self.players))
+        self.graphics = Graphics(self.board, nplayers=len(self.bots))
+        self.niter = 0
+        print("self.fps", self.fps)
 
+    def run(self):
         main_window = QMainWindow()
         main_window.setWindowTitle("Cholerama")
         main_window.setGeometry(0, 0, 1200, 800)
@@ -183,13 +190,13 @@ class GraphicalEngine(Engine):
         # self.pause_button.clicked.connect(self.toggle_pause)
         # widget1_layout.addWidget(self.pause_button)
 
-        # Main game window
-        widget5 = QWidget()
-        widget5_layout = QVBoxLayout(widget5)
-        widget5.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
-        widget5_layout.addWidget(self.graphics.window)
-        # self.window.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        # self.window.setFixedWidth(int(main_window.width() * 0.65))
+        # # Main game window
+        # widget5 = QWidget()
+        # widget5_layout = QVBoxLayout(widget5)
+        # widget5.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        # widget5_layout.addWidget(self.graphics.window)
+        # # self.window.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        # # self.window.setFixedWidth(int(main_window.width() * 0.65))
 
         # self.status_bar = QLabel("NOTHING")
         # self.status_bar.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
@@ -199,7 +206,7 @@ class GraphicalEngine(Engine):
         # # Width of status bar equal to width of window
         # self.status_bar.setFixedWidth(self.window.width())
         # widget5_layout.addWidget(self.status_bar)
-        # layout.addWidget(widget5)
+        layout.addWidget(self.graphics.window)
 
         # # Right side player bar
         # widget2 = QWidget()
@@ -241,9 +248,21 @@ class GraphicalEngine(Engine):
         # self.board[2, 2].mask.setOpacity(0.1)
         # self.update2()
 
-    def run(self):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update)
+        print("interval", 1000 // self.fps if self.fps is not None else 0)
         self.timer.setInterval(1000 // self.fps if self.fps is not None else 0)
         self.timer.start()
         pg.exec()
+
+    def update(self):
+        self.niter += 1
+        super().update(self.niter)
+        self.graphics.update(self.board)
+
+    # def run(self):
+    #     # self.timer = QtCore.QTimer()
+    #     # self.timer.timeout.connect(self.update)
+    #     # self.timer.setInterval(1000 // self.fps if self.fps is not None else 0)
+    #     # self.timer.start()
+    #     pg.exec()

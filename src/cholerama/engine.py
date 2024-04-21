@@ -8,6 +8,7 @@ import numpy as np
 
 
 from . import config
+from .player import Player
 
 
 class Engine:
@@ -22,18 +23,21 @@ class Engine:
         if seed is not None:
             np.random.seed(seed)
 
-        self.start_time = None
         self._test = test
-        self.asteroids = []
         self.safe = safe
-        self.exiting = False
         self.fps = fps
 
         self.board = np.zeros((config.ny, config.nx), dtype=int)
 
-        pattern2 = np.array([[0, 1, 0], [0, 0, 1], [1, 1, 1]])
-        # pattern2 = np.array([[0, 0, 0], [1, 1, 1], [0, 0, 0]])
-        self.board[50:53, 50:53] = pattern2
+        self.bots = {bot.name: bot for bot in bots}
+        starting_positions = self.make_starting_positions()
+        self.players = {}
+        for i, (bot, pos) in enumerate(zip(self.bots.values(), starting_positions)):
+            p = bot.pattern
+            self.board[pos[1] : pos[1] + p.shape[0], pos[0] : pos[0] + p.shape[1]] = (
+                p * (i + 1)
+            )
+            self.players[bot.name] = Player(name=bot.name, number=i + 1, pattern=p)
 
         self.xoff = [-1, 0, 1, -1, 1, -1, 0, 1]
         self.yoff = [-1, -1, -1, 0, 0, 1, 1, 1]
@@ -48,6 +52,13 @@ class Engine:
             )
             self.xinds[i, ...] = g[0]
             self.yinds[i, ...] = g[1]
+
+    def make_starting_positions(self) -> list:
+        return np.random.randint(
+            config.pattern_size,
+            config.nx - config.pattern_size,
+            size=(len(self.bots), 2),
+        )
 
     # def execute_player_bot(self, player, t: float, dt: float):
     #     instructions = None
@@ -88,10 +99,14 @@ class Engine:
     def evolve_board(self):
         neighbors = self.board[self.yinds, self.xinds]
         neighbor_count = np.clip(neighbors, 0, 1).sum(axis=0)
-        birth_values = np.nan_to_num(
-            np.nanmedian(np.where(neighbors == 0, np.nan, neighbors), axis=0),
-            copy=False,
-        ).astype(int)
+        # self.board = np.where(neighbor_count > 0, 1, self.board)
+
+        # birth_values = np.nan_to_num(
+        #     np.nanmedian(np.where(neighbors == 0, np.nan, neighbors), axis=0),
+        #     copy=False,
+        # ).astype(int)
+
+        #
 
         alive_mask = self.board > 0
         alive_neighbor_count = np.where(alive_mask, neighbor_count, 0)
@@ -99,8 +114,11 @@ class Engine:
         new = np.where(
             (alive_neighbor_count == 2) | (alive_neighbor_count == 3), self.board, 0
         )
+
+        # Birth happens always when we have 3 neighbors. The most common value will
+        # always be in position 7.
         birth_mask = ~alive_mask & (neighbor_count == 3)
-        # out[birth_mask] = 1
+        birth_values = np.sort(neighbors, axis=0)[-2]
         self.board = np.where(birth_mask, birth_values, new)
 
     def shutdown(self):
@@ -110,24 +128,15 @@ class Engine:
 
     def update(self, it: int):
         self.evolve_board()
-
-    def update_scoreboard(self):
-
-        for i, player in enumerate(self.players.values()):
-            self.buffers["player_status"][self.bot_index_begin + i, ...] = np.array(
-                [
-                    get_player_points(player),
-                    player.distance_travelled,
-                    player.speed,
-                    len([ch for ch in player.checkpoints if ch.reached]),
-                ],
-                dtype=float,
-            )
+        for player in self.players.values():
+            player.update(self.board)
+            # player.ncells = np.sum(self.board == player.number)
 
     def run(self):
         # self.initialize_time(start_time)
         pause = 1 / self.fps if self.fps is not None else None
-        for it in config.iterations:
+        for it in range(config.iterations):
+            print(it)
             self.update(it)
             if pause is not None:
                 time.sleep(pause)

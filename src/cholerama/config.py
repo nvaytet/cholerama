@@ -5,10 +5,11 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Config:
-    nx: int = 512
-    ny: int = 512
+    nx: int = 400
+    ny: int = 400
     fps: int = 30
     iterations: int = 1000
+    pattern_size: int = 14
 
 
 config = Config()
