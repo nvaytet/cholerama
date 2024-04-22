@@ -40,11 +40,10 @@ for name in [
 cholerama.play(
     bots=bots,  # List of bots to use
     iterations=1000,  # Number of iterations to run
-    fps=30,  # Frames per second
+    fps=None,  # Frames per second
 )
 
 # cholerama.headless(
 #     bots=bots,  # List of bots to use
-#     test=True,  # Set to True to run in test mode
-#     fps=10,  # Frames per second
+#     iterations=1000,  # Number of iterations to run
 # )

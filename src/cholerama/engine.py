@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import datetime
 import time
 from typing import Any, Dict, Optional
 
@@ -19,7 +18,7 @@ class Engine:
         safe: bool = False,
         test: bool = True,
         seed: Optional[int] = None,
-        fps: Optional[int] = 10,
+        # fps: Optional[int] = 10,
     ):
         if seed is not None:
             np.random.seed(seed)
@@ -27,7 +26,7 @@ class Engine:
         self.iterations = iterations
         self._test = test
         self.safe = safe
-        self.fps = fps
+        # self.fps = fps
 
         self.board = np.zeros((config.ny, config.nx), dtype=int)
 
@@ -121,16 +120,15 @@ class Engine:
             (alive_neighbor_count == 2) | (alive_neighbor_count == 3), self.board, 0
         )
 
-        # Birth happens always when we have 3 neighbors. The most common value will
-        # always be in position 7.
         birth_mask = ~alive_mask & (neighbor_count == 3)
+        # Birth happens always when we have 3 neighbors. When sorted, the most common
+        # value will always be in position 7 (=-2).
         birth_values = np.sort(neighbors, axis=0)[-2]
         self.board = np.where(birth_mask, birth_values, new)
 
     def shutdown(self):
-        self.update_scoreboard()
-        write_times({team: p.trip_time for team, p in self.players.items()})
-        self.buffers["all_shutdown"][self.pid] = True
+        fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
+        np.savez(fname, board=self.board, history=self.player_histories)
 
     def update(self, it: int):
         self.evolve_board()
@@ -141,10 +139,8 @@ class Engine:
 
     def run(self):
         # self.initialize_time(start_time)
-        pause = 1 / self.fps if self.fps is not None else None
         for it in range(self.iterations):
-            print(it)
+            # print(it)
             self.update(it)
-            if pause is not None:
-                time.sleep(pause)
+        print(f"Reached {it + 1} iterations.")
         self.shutdown()

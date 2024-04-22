@@ -7,42 +7,44 @@ from typing import Any, Dict, Optional, List
 
 import matplotlib.colors as mcolors
 import numpy as np
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
 
-from PIL import Image, ImageQt
+# import pyqtgraph as pg
+
+# from pyqtgraph.Qt import QtCore, QtGui
+
+# from PIL import Image, ImageQt
 
 
-try:
-    from PyQt5.QtWidgets import (
-        QCheckBox,
-        QFrame,
-        QHBoxLayout,
-        QLabel,
-        QMainWindow,
-        QSizePolicy,
-        QSlider,
-        QVBoxLayout,
-        QWidget,
-        QPushButton,
-    )
-    from PyQt5.QtCore import Qt
-except ImportError:
-    from PySide2.QtWidgets import (
-        QMainWindow,
-        QWidget,
-        QLabel,
-        QHBoxLayout,
-        QVBoxLayout,
-        QCheckBox,
-        QSizePolicy,
-        QSlider,
-        QFrame,
-        QPushButton,
-    )
-    from PySide2.QtCore import Qt
+# try:
+#     from PyQt5.QtWidgets import (
+#         QCheckBox,
+#         QFrame,
+#         QHBoxLayout,
+#         QLabel,
+#         QMainWindow,
+#         QSizePolicy,
+#         QSlider,
+#         QVBoxLayout,
+#         QWidget,
+#         QPushButton,
+#     )
+#     from PyQt5.QtCore import Qt
+# except ImportError:
+#     from PySide2.QtWidgets import (
+#         QMainWindow,
+#         QWidget,
+#         QLabel,
+#         QHBoxLayout,
+#         QVBoxLayout,
+#         QCheckBox,
+#         QSizePolicy,
+#         QSlider,
+#         QFrame,
+#         QPushButton,
+#     )
+#     from PySide2.QtCore import Qt
 
-# import pyqtgraph.opengl as gl
+# # import pyqtgraph.opengl as gl
 
 
 from . import config
@@ -51,6 +53,8 @@ from .engine import Engine
 
 class Graphics:
     def __init__(self, board, player_histories):
+        import pyqtgraph as pg
+
         # t0 = time.time()
         # print("Composing graphics...", end=" ", flush=True)
         self.app = pg.mkQApp("Cholerama")
@@ -125,24 +129,34 @@ class Graphics:
 
 class GraphicalEngine(Engine):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, fps=15, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.graphics = Graphics(self.board, player_histories=self.player_histories)
         self.niter = 0
-        print("self.fps", self.fps)
+        self.fps = fps
+        # print("self.fps", self.fps)
 
     def run(self):
-        main_window = QMainWindow()
+
+        import pyqtgraph as pg
+        from pyqtgraph.Qt import QtCore
+
+        try:
+            from PyQt5 import QtWidgets
+        except ImportError:
+            from PySide2 import QtWidgets
+
+        main_window = QtWidgets.QMainWindow()
         main_window.setWindowTitle("Cholerama")
         main_window.setGeometry(0, 0, 1200, 700)
 
         # Create a central widget to hold the two widgets
-        central_widget = QWidget()
+        central_widget = QtWidgets.QWidget()
         main_window.setCentralWidget(central_widget)
 
         # Create a layout for the central widget
-        layout = QHBoxLayout(central_widget)
+        layout = QtWidgets.QHBoxLayout(central_widget)
 
         # # Left side turn bar
         # widget0 = QWidget()
@@ -282,7 +296,6 @@ class GraphicalEngine(Engine):
 
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update)
-        print("interval", 1000 // self.fps if self.fps is not None else 0)
         self.timer.setInterval(1000 // self.fps if self.fps is not None else 0)
         self.timer.start()
         pg.exec()
