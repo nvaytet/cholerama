@@ -16,7 +16,7 @@ def load(file=None):
 def plot(board, history):
     fig, ax = plt.subplots(2, 1, figsize=(10, 10))
     cmap = mcolors.ListedColormap(["black"] + [f"C{i}" for i in range(len(history))])
-    ax[0].imshow(board, cmap=cmap, interpolation="none")
+    ax[0].imshow(board, cmap=cmap, interpolation="none", origin="lower")
     ax[0].axis("off")
     ax[0].set_title("Final state")
 
@@ -27,8 +27,3 @@ def plot(board, history):
     plt.tight_layout()
     plt.show()
     return fig, ax
-
-
-def show_results(file=None):
-    data = load(file)
-    plot(data["board"], data["history"])

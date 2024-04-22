@@ -8,6 +8,7 @@ import numpy as np
 
 from . import config
 from .player import Player
+from .plot import plot
 
 
 class Engine:
@@ -18,6 +19,7 @@ class Engine:
         safe: bool = False,
         test: bool = True,
         seed: Optional[int] = None,
+        plot_results: bool = False,
         # fps: Optional[int] = 10,
     ):
         if seed is not None:
@@ -26,6 +28,7 @@ class Engine:
         self.iterations = iterations
         self._test = test
         self.safe = safe
+        self.plot_results = plot_results
         # self.fps = fps
 
         self.board = np.zeros((config.ny, config.nx), dtype=int)
@@ -129,6 +132,9 @@ class Engine:
     def shutdown(self):
         fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
         np.savez(fname, board=self.board, history=self.player_histories)
+        if self.plot_results:
+            fig, _ = plot(self.board, self.player_histories)
+            fig.savefig(fname.replace(".npz", ".pdf"))
 
     def update(self, it: int):
         self.evolve_board()

@@ -4,7 +4,7 @@
 from .config import config
 from .engine import Engine
 from .graphics import GraphicalEngine
-from .plot import load, plot, show_results
+from .plot import load, plot
 
 
 def play(*args, **kwargs):
@@ -17,4 +17,4 @@ def headless(*args, **kwargs):
     eng.run()
 
 
-__all__ = ["play", "headless", "load", "plot", "show_results"]
+__all__ = ["play", "headless", "load", "plot"]

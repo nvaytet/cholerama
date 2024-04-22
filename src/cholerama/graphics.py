@@ -299,6 +299,7 @@ class GraphicalEngine(Engine):
         self.timer.setInterval(1000 // self.fps if self.fps is not None else 0)
         self.timer.start()
         pg.exec()
+        self.shutdown()
 
     def update(self):
         self.niter += 1
