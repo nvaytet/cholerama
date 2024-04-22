@@ -80,7 +80,7 @@ class Graphics:
 
         # self.plot = self.right_view.addPlot(0, 0, 1, 1)
         self.lines = []
-        self.xhistory = np.arange(config.iterations)
+        self.xhistory = np.arange(player_histories.shape[1])
         for i in range(nplayers):
             self.lines.append(
                 self.right_view.plot(
@@ -286,7 +286,7 @@ class GraphicalEngine(Engine):
 
     def update(self):
         self.niter += 1
-        if self.niter >= config.iterations:
+        if self.niter >= self.iterations:
             self.timer.stop()
             return
         super().update(self.niter)

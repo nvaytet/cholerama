@@ -29,7 +29,7 @@ for name in [
 
 cholerama.play(
     bots=bots,  # List of bots to use
-    test=True,  # Set to True to run in test mode
+    iterations=1000,  # Number of iterations to run
     fps=10,  # Frames per second
 )
 

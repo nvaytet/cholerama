@@ -15,6 +15,7 @@ class Engine:
     def __init__(
         self,
         bots: list,
+        iterations: int = 100,
         safe: bool = False,
         test: bool = True,
         seed: Optional[int] = None,
@@ -23,6 +24,7 @@ class Engine:
         if seed is not None:
             np.random.seed(seed)
 
+        self.iterations = iterations
         self._test = test
         self.safe = safe
         self.fps = fps
@@ -32,7 +34,7 @@ class Engine:
         self.bots = {bot.name: bot for bot in bots}
         starting_positions = self.make_starting_positions()
         self.players = {}
-        self.player_histories = np.zeros((len(self.bots), config.iterations))
+        self.player_histories = np.zeros((len(self.bots), self.iterations))
         for i, (bot, pos) in enumerate(zip(self.bots.values(), starting_positions)):
             p = bot.pattern
             self.board[pos[1] : pos[1] + p.shape[0], pos[0] : pos[0] + p.shape[1]] = (
@@ -141,7 +143,7 @@ class Engine:
     def run(self):
         # self.initialize_time(start_time)
         pause = 1 / self.fps if self.fps is not None else None
-        for it in range(config.iterations):
+        for it in range(self.iterations):
             print(it)
             self.update(it)
             if pause is not None:
