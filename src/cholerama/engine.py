@@ -4,6 +4,7 @@ import time
 from typing import Any, Dict, Optional
 
 import numpy as np
+import matplotlib.colors as mcolors
 
 
 from . import config
@@ -38,7 +39,12 @@ class Engine:
         self.players = {}
         self.player_histories = np.zeros((len(self.bots), self.iterations))
         for i, (bot, pos) in enumerate(zip(self.bots.values(), starting_positions)):
-            player = Player(name=bot.name, number=i + 1, pattern=bot.pattern)
+            player = Player(
+                name=bot.name,
+                number=i + 1,
+                pattern=bot.pattern,
+                color=bot.color if bot.color is not None else mcolors.to_hex(f"C{i}"),
+            )
             p = player.pattern
             self.board[pos[1] : pos[1] + p.shape[0], pos[0] : pos[0] + p.shape[1]] = (
                 p * (i + 1)
@@ -129,12 +135,18 @@ class Engine:
         birth_values = np.sort(neighbors, axis=0)[-2]
         self.board = np.where(birth_mask, birth_values, new)
 
-    def shutdown(self):
-        fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
-        np.savez(fname, board=self.board, history=self.player_histories)
+    def show_results(self, fname: str):
         if self.plot_results:
             fig, _ = plot(self.board, self.player_histories)
             fig.savefig(fname.replace(".npz", ".pdf"))
+
+    def shutdown(self):
+        fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
+        np.savez(fname, board=self.board, history=self.player_histories)
+        self.show_results(fname)
+        # if self.plot_results:
+        #     fig, _ = plot(self.board, self.player_histories)
+        #     fig.savefig(fname.replace(".npz", ".pdf"))
 
     def update(self, it: int):
         self.evolve_board()

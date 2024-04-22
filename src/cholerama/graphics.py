@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-# flake8: noqa F405
 import os
 import time
 from typing import Any, Dict, Optional, List
@@ -8,55 +7,16 @@ from typing import Any, Dict, Optional, List
 import matplotlib.colors as mcolors
 import numpy as np
 
-# import pyqtgraph as pg
-
-# from pyqtgraph.Qt import QtCore, QtGui
-
-# from PIL import Image, ImageQt
-
-
-# try:
-#     from PyQt5.QtWidgets import (
-#         QCheckBox,
-#         QFrame,
-#         QHBoxLayout,
-#         QLabel,
-#         QMainWindow,
-#         QSizePolicy,
-#         QSlider,
-#         QVBoxLayout,
-#         QWidget,
-#         QPushButton,
-#     )
-#     from PyQt5.QtCore import Qt
-# except ImportError:
-#     from PySide2.QtWidgets import (
-#         QMainWindow,
-#         QWidget,
-#         QLabel,
-#         QHBoxLayout,
-#         QVBoxLayout,
-#         QCheckBox,
-#         QSizePolicy,
-#         QSlider,
-#         QFrame,
-#         QPushButton,
-#     )
-#     from PySide2.QtCore import Qt
-
-# # import pyqtgraph.opengl as gl
-
 
 from . import config
 from .engine import Engine
+from .plot import plot
 
 
 class Graphics:
     def __init__(self, board, player_histories):
         import pyqtgraph as pg
 
-        # t0 = time.time()
-        # print("Composing graphics...", end=" ", flush=True)
         self.app = pg.mkQApp("Cholerama")
         self.window = pg.GraphicsLayoutWidget()
         self.window.setWindowTitle("Cholerama")
@@ -66,11 +26,6 @@ class Graphics:
 
         nplayers = len(player_histories)
 
-        # self.canvas.nextRow()
-
-        # self.cmap = mcolors.ListedColormap(
-        #     ["dimgray"] + [f"C{i}" for i in range(nplayers)]
-        # )
         self.cmap = mcolors.ListedColormap(
             ["black"] + [f"C{i}" for i in range(nplayers)]
         )
@@ -137,26 +92,54 @@ class GraphicalEngine(Engine):
         self.fps = fps
         # print("self.fps", self.fps)
 
+    def update_leaderboard(self, scores):
+        sorted_scores = dict(
+            sorted(scores.items(), key=lambda item: item[1], reverse=True)
+        )
+        for i, (name, score) in enumerate(sorted_scores.items()):
+            self.score_boxes[i].setText(
+                f'<div style="color:{self.players[name].color}">&#9632;</div> '
+                f"{i+1}. {name[:config.max_name_length]}: {score}"
+            )
+
+        # sorted_times = dict(sorted(fastest_times.items(), key=lambda item: item[1]))
+        # time_list = list(enumerate(sorted_times.items()))
+        # for i, (name, t) in time_list[:3]:
+        #     try:
+        #         time = str(datetime.timedelta(seconds=int(t)))[2:]
+        #     except OverflowError:
+        #         time = "None"
+        #     self.fastest_boxes[i].setText(
+        #         f'<div style="color:{self.players[name].color}">&#9632;</div> '
+        #         f"{i+1}. {name[:config.max_name_length]}: {time}"
+        #     )
+
     def run(self):
 
         import pyqtgraph as pg
         from pyqtgraph.Qt import QtCore
 
         try:
-            from PyQt5 import QtWidgets
+            from PyQt5 import QtWidgets as qw
         except ImportError:
-            from PySide2 import QtWidgets
+            from PySide2 import QtWidgets as qw
 
-        main_window = QtWidgets.QMainWindow()
+        main_window = qw.QMainWindow()
         main_window.setWindowTitle("Cholerama")
         main_window.setGeometry(0, 0, 1200, 700)
 
         # Create a central widget to hold the two widgets
-        central_widget = QtWidgets.QWidget()
+        central_widget = qw.QWidget()
         main_window.setCentralWidget(central_widget)
 
         # Create a layout for the central widget
-        layout = QtWidgets.QHBoxLayout(central_widget)
+        layout = qw.QHBoxLayout(central_widget)
+
+        def _make_separator():
+            separator = qw.QFrame()
+            separator.setFrameShape(qw.QFrame.HLine)
+            separator.setLineWidth(1)
+            return separator
 
         # # Left side turn bar
         # widget0 = QWidget()
@@ -255,19 +238,42 @@ class GraphicalEngine(Engine):
         layout.addWidget(self.graphics.window)
 
         # # Right side player bar
-        # widget2 = QWidget()
-        # layout.addWidget(widget2)
-        # widget2_layout = QVBoxLayout(widget2)
-        # widget2.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
-        # widget2.setMinimumWidth(int(main_window.width() * 0.1))
+        widget2 = qw.QWidget()
+        layout.addWidget(widget2)
+        widget2_layout = qw.QVBoxLayout(widget2)
+        widget2.setSizePolicy(qw.QSizePolicy.Fixed, qw.QSizePolicy.Preferred)
+        widget2.setMinimumWidth(int(self.graphics.window.width() * 0.08))
+        widget2_layout.addWidget(qw.QLabel("Leader board"))
 
-        # for name in players[n:]:
-        #     widget = QWidget()
-        #     widget_layout = QVBoxLayout(widget)
-        #     widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
-        #     header = QLabel(
-        #         f'{name}: <img src="{self.player_avatars[name]}" width="32" height="32">'
-        #     )
+        widget2_layout.addWidget(_make_separator())
+
+        widget2_layout.addWidget(qw.QLabel("Scores:"))
+        self.score_boxes = {}
+        for i, p in enumerate(self.players.values()):
+            self.score_boxes[i] = qw.QLabel(p.name)
+            widget2_layout.addWidget(self.score_boxes[i])
+
+        widget2_layout.addWidget(_make_separator())
+
+        widget2_layout.addWidget(qw.QLabel("Peak coverage:"))
+        self.fastest_boxes = {}
+        for i in range(3):
+            self.fastest_boxes[i] = qw.QLabel(str(i + 1))
+            widget2_layout.addWidget(self.fastest_boxes[i])
+
+        widget2_layout.addWidget(_make_separator())
+
+        widget2_layout.addStretch()
+        self.play_button = qw.QPushButton("Play")
+        self.play_button.setCheckable(True)
+        self.play_button.clicked.connect(self.toggle_pause)
+        widget2_layout.addWidget(self.play_button)
+
+        self.update_leaderboard({name: 0 for name in self.players})
+        # self.update_leaderboard(
+        #     read_scores(self.players.keys(), test=self.test), self.fastest_times
+        # )
+
         #     widget_layout.addWidget(header)
         #     footer = QWidget()
         #     footer_layout = QHBoxLayout(footer)
@@ -297,9 +303,22 @@ class GraphicalEngine(Engine):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update)
         self.timer.setInterval(1000 // self.fps if self.fps is not None else 0)
-        self.timer.start()
+        # self.timer.start()
         pg.exec()
         self.shutdown()
+
+    def toggle_pause(self):
+        if self.play_button.isChecked():
+            self.timer.start()
+            self.play_button.setText("Pause")
+        else:
+            self.timer.stop()
+            self.play_button.setText("Play")
+
+    def show_results(self, fname: str):
+        if self.plot_results:
+            fig, _ = plot(self.board, self.player_histories, show=False)
+            fig.savefig(fname.replace(".npz", ".pdf"))
 
     def update(self):
         self.niter += 1

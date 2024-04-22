@@ -39,9 +39,9 @@ for name in [
 
 cholerama.play(
     bots=bots,  # List of bots to use
-    iterations=100,  # Number of iterations to run
-    fps=None,  # Frames per second
-    plot_results=True,  # Plot results
+    iterations=1000,  # Number of iterations to run
+    fps=30,  # Frames per second
+    plot_results=True,  # Save a figure of the results
 )
 
 # cholerama.headless(

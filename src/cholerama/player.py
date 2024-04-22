@@ -10,9 +10,13 @@ from . import config
 
 
 class Player:
-    def __init__(self, name: str, number: int, pattern: Union[np.ndarray, str]):
+    def __init__(
+        self, name: str, number: int, color: str, pattern: Union[np.ndarray, str]
+    ):
         self.name = name
         self.number = number
+        self.score = 0
+        self.color = color
 
         if isinstance(pattern, str):
             im = Image.open(pattern).convert("RGB")

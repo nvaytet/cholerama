@@ -9,6 +9,7 @@ class Config:
     nx: int = 500
     ny: int = 400
     pattern_size: Tuple[int] = (18, 36)
+    max_name_length: int = 30
 
 
 config = Config()

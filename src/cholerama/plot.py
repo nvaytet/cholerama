@@ -13,7 +13,7 @@ def load(file=None):
     return {"board": board, "history": history}
 
 
-def plot(board, history):
+def plot(board, history, show=True):
     fig, ax = plt.subplots(2, 1, figsize=(10, 10))
     cmap = mcolors.ListedColormap(["black"] + [f"C{i}" for i in range(len(history))])
     ax[0].imshow(board, cmap=cmap, interpolation="none", origin="lower")
@@ -25,5 +25,6 @@ def plot(board, history):
     ax[1].set_xlabel("Iterations")
     ax[1].set_ylabel("Number of cells")
     plt.tight_layout()
-    plt.show()
+    if show:
+        plt.show()
     return fig, ax
