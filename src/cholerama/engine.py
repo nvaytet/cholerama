@@ -36,11 +36,11 @@ class Engine:
         self.players = {}
         self.player_histories = np.zeros((len(self.bots), self.iterations))
         for i, (bot, pos) in enumerate(zip(self.bots.values(), starting_positions)):
-            p = bot.pattern
+            player = Player(name=bot.name, number=i + 1, pattern=bot.pattern)
+            p = player.pattern
             self.board[pos[1] : pos[1] + p.shape[0], pos[0] : pos[0] + p.shape[1]] = (
                 p * (i + 1)
             )
-            player = Player(name=bot.name, number=i + 1, pattern=p)
             self.players[bot.name] = player
             self.player_histories[i, 0] = player.ncells
 
@@ -61,11 +61,10 @@ class Engine:
             self.yinds[i, ...] = g[1]
 
     def make_starting_positions(self) -> list:
-        return np.random.randint(
-            config.pattern_size,
-            config.nx - config.pattern_size,
-            size=(len(self.bots), 2),
-        )
+        bound = max(config.pattern_size)
+        x = np.random.randint(bound, config.nx - bound, size=len(self.bots))
+        y = np.random.randint(bound, config.ny - bound, size=len(self.bots))
+        return list(zip(x, y))
 
     # def execute_player_bot(self, player, t: float, dt: float):
     #     instructions = None

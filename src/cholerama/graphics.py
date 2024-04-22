@@ -71,7 +71,7 @@ class Graphics:
             ["black"] + [f"C{i}" for i in range(nplayers)]
         )
 
-        self.image = pg.ImageItem(image=self.cmap(board))
+        self.image = pg.ImageItem(image=self.cmap(board.T))
         self.left_view.addItem(self.image)
 
         # self.right_view = self.window.addViewBox(1, 2)
@@ -116,7 +116,7 @@ class Graphics:
 
     def update(self, board, histories):
 
-        self.image.setImage(self.cmap(board))
+        self.image.setImage(self.cmap(board.T))
         for i, hist in enumerate(histories):
             self.lines[i].setData(hist[:], self.xhistory)
 
@@ -133,7 +133,7 @@ class GraphicalEngine(Engine):
     def run(self):
         main_window = QMainWindow()
         main_window.setWindowTitle("Cholerama")
-        main_window.setGeometry(0, 0, 1200, 800)
+        main_window.setGeometry(0, 0, 1200, 700)
 
         # Create a central widget to hold the two widgets
         central_widget = QWidget()
