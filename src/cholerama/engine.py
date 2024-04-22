@@ -30,6 +30,8 @@ class Engine:
         self._test = test
         self.safe = safe
         self.plot_results = plot_results
+        self.token_interval = config.tokens_per_game // iterations
+        print("self.token_interval", self.token_interval)
         # self.fps = fps
 
         self.board = np.zeros((config.ny, config.nx), dtype=int)
@@ -77,7 +79,7 @@ class Engine:
     # def execute_player_bot(self, player, t: float, dt: float):
     #     instructions = None
     #     args = {
-    #         "t": t,
+    #         "iteration": t,
     #         "dt": dt,
     #         "longitude": player.longitude,
     #         "latitude": player.latitude,
@@ -96,19 +98,29 @@ class Engine:
     #         instructions = self.bots[player.team].run(**args)
     #     return instructions
 
-    # def call_player_bots(self, t: float, dt: float):
-    #     for player in [p for p in self.players.values() if not p.arrived]:
-    #         if self.safe:
-    #             try:
-    #                 player.execute_bot_instructions(
-    #                     self.execute_player_bot(player=player, t=t, dt=dt)
-    #                 )
-    #             except:  # noqa
-    #                 pass
-    #         else:
-    #             player.execute_bot_instructions(
-    #                 self.execute_player_bot(player=player, t=t, dt=dt)
-    #             )
+    def call_player_bots(self, it: int):
+        # TODO: Roll the order of players for each round
+        for name, player in ((n, p) for n, p in self.players.items() if p.ncells > 0):
+            self.board.setflags(write=False)
+            new_cells = None
+            if self.safe:
+                try:
+                    new_cells = self.bots[name].run(iteration=it, board=self.board)
+                except:  # noqa
+                    pass
+            else:
+                new_cells = self.bots[name].run(iteration=it, board=self.board)
+            self.board.setflags(write=True)
+            if new_cells:
+                x, y = new_cells
+                if len(x) != len(y):
+                    raise ValueError("x and y must have the same length.")
+                if len(x) > player.tokens:
+                    raise ValueError(
+                        f"Player {name} does not have enough tokens. "
+                        f"Requested {len(x)}, but has {player.tokens}."
+                    )
+                self.board[np.asarray(y), np.asarray(x)] = player.number
 
     def evolve_board(self):
         neighbors = self.board[self.yinds, self.xinds]
@@ -149,6 +161,10 @@ class Engine:
         #     fig.savefig(fname.replace(".npz", ".pdf"))
 
     def update(self, it: int):
+        if it % self.token_interval == 0:
+            for player in self.players.values():
+                player.tokens += 1
+        self.call_player_bots(it)
         self.evolve_board()
         for i, player in enumerate(self.players.values()):
             player.update(self.board)
@@ -157,8 +173,8 @@ class Engine:
 
     def run(self):
         # self.initialize_time(start_time)
-        for it in range(self.iterations):
+        for it in range(1, self.iterations + 1):
             # print(it)
             self.update(it)
-        print(f"Reached {it + 1} iterations.")
+        print(f"Reached {it} iterations.")
         self.shutdown()
