@@ -76,6 +76,7 @@ class Graphics:
 
         # self.right_view = self.window.addViewBox(1, 2)
         self.right_view = self.window.addPlot(row=None, col=1)
+        self.right_view.setMouseEnabled(x=False)
         # self.right_view.setAspectLocked(True)
 
         # self.plot = self.right_view.addPlot(0, 0, 1, 1)

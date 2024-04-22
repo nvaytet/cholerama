@@ -7,7 +7,7 @@ from dataclasses import dataclass
 class Config:
     nx: int = 400
     ny: int = 400
-    pattern_size: int = 14
+    pattern_size: int = 36
 
 
 config = Config()

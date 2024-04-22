@@ -16,8 +16,8 @@ for name in [
     "Cholera",
     "Typhoid",
     "Dysentery",
-    "Malaria",
-    "Influenza",
+    # "Malaria",
+    # "Influenza",
     # "Tuberculosis",
     # "YellowFever",
     # "Smallpox",
@@ -27,10 +27,20 @@ for name in [
     bot.name = name
     bots.append(bot)
 
+# for name in ["SpaceFiller", "AnotherFiller"]:
+#     bot = germ_bot.FillerBot()
+#     bot.name = name
+#     bots.append(bot)
+
+# for name in ["Puff", "Huff"]:
+#     bot = germ_bot.PufferBot()
+#     bot.name = name
+#     bots.append(bot)
+
 cholerama.play(
     bots=bots,  # List of bots to use
     iterations=1000,  # Number of iterations to run
-    fps=10,  # Frames per second
+    fps=30,  # Frames per second
 )
 
 # cholerama.headless(
