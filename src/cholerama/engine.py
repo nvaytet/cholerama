@@ -30,7 +30,7 @@ class Engine:
         self._test = test
         self.safe = safe
         self.plot_results = plot_results
-        self.token_interval = config.tokens_per_game // iterations
+        self.token_interval = iterations // config.tokens_per_game
         print("self.token_interval", self.token_interval)
         # self.fps = fps
 
@@ -103,24 +103,31 @@ class Engine:
         for name, player in ((n, p) for n, p in self.players.items() if p.ncells > 0):
             self.board.setflags(write=False)
             new_cells = None
+            args = {
+                "iteration": int(it),
+                "board": self.board,
+                "tokens": int(player.tokens),
+            }
             if self.safe:
                 try:
-                    new_cells = self.bots[name].run(iteration=it, board=self.board)
+                    new_cells = self.bots[name].run(**args)
                 except:  # noqa
                     pass
             else:
-                new_cells = self.bots[name].run(iteration=it, board=self.board)
+                new_cells = self.bots[name].run(**args)
             self.board.setflags(write=True)
             if new_cells:
                 x, y = new_cells
-                if len(x) != len(y):
+                ntok = len(x)
+                if ntok != len(y):
                     raise ValueError("x and y must have the same length.")
-                if len(x) > player.tokens:
+                if ntok > player.tokens:
                     raise ValueError(
                         f"Player {name} does not have enough tokens. "
-                        f"Requested {len(x)}, but has {player.tokens}."
+                        f"Requested {ntok}, but has {player.tokens}."
                     )
                 self.board[np.asarray(y), np.asarray(x)] = player.number
+                player.tokens -= ntok
 
     def evolve_board(self):
         neighbors = self.board[self.yinds, self.xinds]

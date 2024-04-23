@@ -17,6 +17,7 @@ class Player:
         self.number = number
         self.score = 0
         self.color = color
+        self.tokens = 0
 
         if isinstance(pattern, str):
             im = Image.open(pattern).convert("RGB")
