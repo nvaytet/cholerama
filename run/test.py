@@ -31,15 +31,15 @@ for name in [
     bot.name = name
     bots.append(bot)
 
-# for name in ["SpaceFiller", "AnotherFiller"]:
-#     bot = germ_bot.FillerBot()
-#     bot.name = name
-#     bots.append(bot)
+for name in ["SpaceFiller", "AnotherFiller"]:
+    bot = germ_bot.FillerBot()
+    bot.name = name
+    bots.append(bot)
 
-# for name in ["Puff", "Huff"]:
-#     bot = germ_bot.PufferBot()
-#     bot.name = name
-#     bots.append(bot)
+for name in ["Puff", "Huff"]:
+    bot = germ_bot.PufferBot()
+    bot.name = name
+    bots.append(bot)
 
 cholerama.play(
     bots=bots,  # List of bots to use
