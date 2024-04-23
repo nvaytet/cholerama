@@ -2,11 +2,11 @@
 
 from typing import Union
 
-from PIL import Image
 import numpy as np
 
 
 from . import config
+from .helpers import image_to_array
 
 
 class Player:
@@ -20,10 +20,7 @@ class Player:
         self.tokens = 0
 
         if isinstance(pattern, str):
-            im = Image.open(pattern).convert("RGB")
-            a = np.array(im)
-            s = (a - 255).sum(axis=-1)
-            self.pattern = np.clip(s, 0, 1)
+            self.pattern = image_to_array(pattern)
         else:
             self.pattern = np.asarray(pattern)
 
@@ -38,9 +35,3 @@ class Player:
 
     def update(self, board: np.ndarray):
         self.ncells = np.sum(board == self.number)
-        # self.history.append(self.ncells)
-        # print(self.name, self.ncells)
-
-    # @property
-    # def coverage(self):
-    #     return self.ncells / (config.nx * config.ny)

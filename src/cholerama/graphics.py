@@ -5,6 +5,7 @@ import time
 from typing import Any, Dict, Optional, List
 
 import matplotlib.colors as mcolors
+from matplotlib import colormaps
 import numpy as np
 
 
@@ -14,7 +15,7 @@ from .plot import plot
 
 
 class Graphics:
-    def __init__(self, board, player_histories):
+    def __init__(self, board, players, player_histories):
         import pyqtgraph as pg
 
         self.app = pg.mkQApp("Cholerama")
@@ -26,9 +27,12 @@ class Graphics:
 
         nplayers = len(player_histories)
 
-        self.cmap = mcolors.ListedColormap(
-            ["black"] + [f"C{i}" for i in range(nplayers)]
-        )
+        self.cmap = mcolors.ListedColormap(["black"] + [p.color for p in players])
+
+        # tab20 = colormaps["tab20"]
+        # self.cmap = mcolors.ListedColormap(
+        #     ["black"] + [f"C{i}" for i in range(nplayers)]
+        # )
 
         self.image = pg.ImageItem(image=self.cmap(board.T))
         self.left_view.addItem(self.image)
@@ -52,6 +56,7 @@ class Graphics:
                     pen=mcolors.to_hex(f"C{i}"),
                 )
             )
+
         # plotpen = pg.mkPen(color='k', width=2)
         # upperplot.plot(first_time, first_record, pen=plotpen)
 
@@ -87,7 +92,11 @@ class GraphicalEngine(Engine):
     def __init__(self, *args, fps=15, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.graphics = Graphics(self.board, player_histories=self.player_histories)
+        self.graphics = Graphics(
+            self.board,
+            players=self.players.values(),
+            player_histories=self.player_histories,
+        )
         self.niter = 0
         self.fps = fps
         # print("self.fps", self.fps)
@@ -100,6 +109,13 @@ class GraphicalEngine(Engine):
             self.score_boxes[i].setText(
                 f'<div style="color:{self.players[name].color}">&#9632;</div> '
                 f"{i+1}. {name[:config.max_name_length]}: {score}"
+            )
+
+    def update_tokenboard(self):
+        for name, p in self.players.items():
+            self.token_boxes[name].setText(
+                f'<div style="color:{p.color}">&#9632;</div> '
+                f"{name[:config.max_name_length]}: {p.tokens}"
             )
 
         # sorted_times = dict(sorted(fastest_times.items(), key=lambda item: item[1]))
@@ -243,11 +259,11 @@ class GraphicalEngine(Engine):
         widget2_layout = qw.QVBoxLayout(widget2)
         widget2.setSizePolicy(qw.QSizePolicy.Fixed, qw.QSizePolicy.Preferred)
         widget2.setMinimumWidth(int(self.graphics.window.width() * 0.08))
-        widget2_layout.addWidget(qw.QLabel("Leader board"))
+        widget2_layout.addWidget(qw.QLabel("<b>Leader board</b>"))
 
         widget2_layout.addWidget(_make_separator())
 
-        widget2_layout.addWidget(qw.QLabel("Scores:"))
+        widget2_layout.addWidget(qw.QLabel("<b>Scores:</b>"))
         self.score_boxes = {}
         for i, p in enumerate(self.players.values()):
             self.score_boxes[i] = qw.QLabel(p.name)
@@ -255,11 +271,19 @@ class GraphicalEngine(Engine):
 
         widget2_layout.addWidget(_make_separator())
 
-        widget2_layout.addWidget(qw.QLabel("Peak coverage:"))
+        widget2_layout.addWidget(qw.QLabel("<b>Peak coverage:</b>"))
         self.fastest_boxes = {}
         for i in range(3):
             self.fastest_boxes[i] = qw.QLabel(str(i + 1))
             widget2_layout.addWidget(self.fastest_boxes[i])
+
+        widget2_layout.addWidget(_make_separator())
+
+        widget2_layout.addWidget(qw.QLabel("<b>Player tokens:</b>"))
+        self.token_boxes = {}
+        for name, p in self.players.items():
+            self.token_boxes[name] = qw.QLabel(p.name)
+            widget2_layout.addWidget(self.token_boxes[name])
 
         widget2_layout.addWidget(_make_separator())
 
@@ -270,6 +294,7 @@ class GraphicalEngine(Engine):
         widget2_layout.addWidget(self.play_button)
 
         self.update_leaderboard({name: 0 for name in self.players})
+        self.update_tokenboard()
         # self.update_leaderboard(
         #     read_scores(self.players.keys(), test=self.test), self.fastest_times
         # )
@@ -327,6 +352,7 @@ class GraphicalEngine(Engine):
             return
         super().update(self.niter)
         self.graphics.update(self.board, histories=self.player_histories)
+        self.update_tokenboard()
 
     # def run(self):
     #     # self.timer = QtCore.QTimer()

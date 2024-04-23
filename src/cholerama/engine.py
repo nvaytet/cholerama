@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import matplotlib.colors as mcolors
@@ -10,6 +10,7 @@ import matplotlib.colors as mcolors
 from . import config
 from .player import Player
 from .plot import plot
+from .tools import make_color
 
 
 class Engine:
@@ -45,7 +46,7 @@ class Engine:
                 name=bot.name,
                 number=i + 1,
                 pattern=bot.pattern,
-                color=bot.color if bot.color is not None else mcolors.to_hex(f"C{i}"),
+                color=make_color(i if bot.color is None else bot.color),
             )
             p = player.pattern
             self.board[pos[1] : pos[1] + p.shape[0], pos[0] : pos[0] + p.shape[1]] = (
@@ -98,6 +99,30 @@ class Engine:
     #         instructions = self.bots[player.team].run(**args)
     #     return instructions
 
+    def add_player_new_cells(
+        self, player: Player, new_cells: Tuple[np.ndarray, np.ndarray]
+    ):
+        x, y = new_cells
+        ntok = len(x)
+        ok = True
+        if ntok != len(y):
+            print(f"Player {player.name}: new cells x and y have different lengths.")
+            ok = False
+        if ntok > player.tokens:
+            print(
+                f"Player {player.name}: not enough tokens: needs {ntok}, "
+                f"has {player.tokens}."
+            )
+            ok = False
+        x = np.asarray(x) % config.nx
+        y = np.asarray(y) % config.ny
+        if self.board[y, x].sum() > 0:
+            print(f"Player {player.name}: cannot overwrite alive cells.")
+            ok = False
+        if ok:
+            self.board[y, x] = player.number
+            player.tokens -= ntok
+
     def call_player_bots(self, it: int):
         # TODO: Roll the order of players for each round
         for name, player in ((n, p) for n, p in self.players.items() if p.ncells > 0):
@@ -117,17 +142,7 @@ class Engine:
                 new_cells = self.bots[name].run(**args)
             self.board.setflags(write=True)
             if new_cells:
-                x, y = new_cells
-                ntok = len(x)
-                if ntok != len(y):
-                    raise ValueError("x and y must have the same length.")
-                if ntok > player.tokens:
-                    raise ValueError(
-                        f"Player {name} does not have enough tokens. "
-                        f"Requested {ntok}, but has {player.tokens}."
-                    )
-                self.board[np.asarray(y), np.asarray(x)] = player.number
-                player.tokens -= ntok
+                self.add_player_new_cells(player, new_cells)
 
     def evolve_board(self):
         neighbors = self.board[self.yinds, self.xinds]

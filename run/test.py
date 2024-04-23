@@ -22,6 +22,10 @@ for name in [
     # "YellowFever",
     # "Smallpox",
     # "Measles",
+    # "Anthrax",
+    # "BubonicPlague",
+    # "Ebola",
+    # "HIV",
 ]:
     bot = germ_bot.Bot()
     bot.name = name
@@ -39,8 +43,8 @@ for name in [
 
 cholerama.play(
     bots=bots,  # List of bots to use
-    iterations=1000,  # Number of iterations to run
-    fps=10,  # Frames per second
+    iterations=5000,  # Number of iterations to run
+    fps=30,  # Frames per second
     plot_results=True,  # Save a figure of the results
 )
 
