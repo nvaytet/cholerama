@@ -274,7 +274,7 @@ class GraphicalEngine(Engine):
         widget2_layout.addWidget(qw.QLabel("<b>Peak coverage:</b>"))
         self.fastest_boxes = {}
         for i in range(3):
-            self.fastest_boxes[i] = qw.QLabel(str(i + 1))
+            self.fastest_boxes[i] = qw.QLabel(f"{i + 1}.")
             widget2_layout.addWidget(self.fastest_boxes[i])
 
         widget2_layout.addWidget(_make_separator())
