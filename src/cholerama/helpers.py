@@ -8,7 +8,7 @@ from PIL import Image
 
 
 def find_empty_patches(
-    board: np.ndarray, patch_size: Union[int, Tuple[int, int]]
+    board: np.ndarray, patch_size: Union[int, Tuple[int, int]], skip: int = 8
 ) -> np.ndarray:
     """
     Find all empty patches of a given size in the board.
@@ -19,16 +19,22 @@ def find_empty_patches(
         The current state of the board.
     patch_size : int or tuple
         The size of the patch to search for.
+    skip : int
+        The step size for the sliding window. The larger the faster, but less accurate.
 
     Returns:
     -------
     numpy array
         The [y, x] indices of the bottom-left corner of each empty patch.
     """
-    valid = board == 0
+    # valid = board == 0
     if isinstance(patch_size, int):
         patch_size = (patch_size, patch_size)
-    return np.argwhere(sliding_window_view(valid, patch_size).all(axis=(-2, -1)))
+    # return np.argwhere(sliding_window_view(valid, patch_size).all(axis=(-2, -1)))
+    view = sliding_window_view(board, patch_size)[::skip, ::skip, ...]
+    # yy, xx = np.where(view.sum((2, 3)) == 0)
+    # yy*skip, xx*skip
+    return np.argwhere(view.sum((2, 3)) == 0) * skip
 
 
 def image_to_array(image_path: str) -> np.ndarray:
