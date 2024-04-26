@@ -31,7 +31,7 @@ class Engine:
         self._test = test
         self.safe = safe
         self.plot_results = plot_results
-        self.token_interval = iterations // config.tokens_per_game
+        self.token_interval = max(1, iterations // config.tokens_per_game)
         print("self.token_interval", self.token_interval)
         # self.fps = fps
 
@@ -40,7 +40,7 @@ class Engine:
         self.bots = {bot.name: bot for bot in bots}
         starting_positions = self.make_starting_positions()
         self.players = {}
-        self.player_histories = np.zeros((len(self.bots), self.iterations))
+        self.player_histories = np.zeros((len(self.bots), self.iterations + 1))
         for i, (bot, pos) in enumerate(zip(self.bots.values(), starting_positions)):
             player = Player(
                 name=bot.name,
@@ -146,28 +146,34 @@ class Engine:
 
     def evolve_board(self):
         neighbors = self.board[self.yinds, self.xinds]
-        neighbor_count = np.clip(neighbors, 0, 1).sum(axis=0)
-        # self.board = np.where(neighbor_count > 0, 1, self.board)
-
-        # birth_values = np.nan_to_num(
-        #     np.nanmedian(np.where(neighbors == 0, np.nan, neighbors), axis=0),
-        #     copy=False,
-        # ).astype(int)
-
-        #
+        neighbor_count = np.where(neighbors > 0, 1, 0).sum(axis=0)
+        # neighbor_count = np.clip(neighbors, 0, 1).sum(axis=0)
 
         alive_mask = self.board > 0
         alive_neighbor_count = np.where(alive_mask, neighbor_count, 0)
+
+        # # Apply rules
+        # new = np.where(
+        #     (alive_neighbor_count == 2) | (alive_neighbor_count == 3), self.board, 0
+        # )
+
+        # birth_mask = ~alive_mask & (neighbor_count == 3)
+        # # # Birth happens always when we have 3 neighbors. When sorted, the most common
+        # # # value will always be in position 7 (=-2).
+        # birth_values = np.sort(neighbors, axis=0)[-2]
+        # self.board = np.where(birth_mask, birth_values, new)
+
         # Apply rules
-        new = np.where(
+        self.board = np.where(
             (alive_neighbor_count == 2) | (alive_neighbor_count == 3), self.board, 0
         )
 
         birth_mask = ~alive_mask & (neighbor_count == 3)
         # Birth happens always when we have 3 neighbors. When sorted, the most common
         # value will always be in position 7 (=-2).
-        birth_values = np.sort(neighbors, axis=0)[-2]
-        self.board = np.where(birth_mask, birth_values, new)
+        birth_inds = np.where(birth_mask)
+        birth_values = np.sort(neighbors[:, birth_inds[0], birth_inds[1]], axis=0)[-2]
+        self.board[birth_inds[0], birth_inds[1]] = birth_values
 
     def show_results(self, fname: str):
         if self.plot_results:
@@ -196,7 +202,6 @@ class Engine:
     def run(self):
         # self.initialize_time(start_time)
         for it in range(1, self.iterations + 1):
-            # print(it)
             self.update(it)
         print(f"Reached {it} iterations.")
         self.shutdown()

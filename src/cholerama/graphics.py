@@ -347,7 +347,7 @@ class GraphicalEngine(Engine):
 
     def update(self):
         self.niter += 1
-        if self.niter >= self.iterations:
+        if self.niter > self.iterations:
             self.timer.stop()
             return
         super().update(self.niter)
