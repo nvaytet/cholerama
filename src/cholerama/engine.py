@@ -12,6 +12,7 @@ from . import config
 from .compute import evolve_board
 from .player import Player
 from .plot import plot
+from .scores import finalize_scores
 from .tools import make_color
 
 
@@ -24,9 +25,11 @@ class Engine:
         test: bool = True,
         seed: Optional[int] = None,
         plot_results: bool = False,
+        nthreads: Optional[int] = None,
         # fps: Optional[int] = 10,
     ):
-        set_num_threads(14)
+        if nthreads is not None:
+            set_num_threads(nthreads)
         if seed is not None:
             np.random.seed(seed)
 
@@ -35,8 +38,6 @@ class Engine:
         self.safe = safe
         self.plot_results = plot_results
         self.token_interval = max(1, iterations // config.tokens_per_game)
-        print("self.token_interval", self.token_interval)
-        # self.fps = fps
 
         self.board = np.zeros((config.ny, config.nx), dtype=int)
         self.new_board = self.board.copy()
@@ -44,7 +45,9 @@ class Engine:
         self.bots = {bot.name: bot for bot in bots}
         starting_positions = self.make_starting_positions()
         self.players = {}
-        self.player_histories = np.zeros((len(self.bots), self.iterations + 1))
+        self.player_histories = np.zeros(
+            (len(self.bots), self.iterations + 1), dtype=int
+        )
         for i, (bot, pos) in enumerate(zip(self.bots.values(), starting_positions)):
             player = Player(
                 name=bot.name,
@@ -199,6 +202,9 @@ class Engine:
             fig.savefig(fname)
 
     def shutdown(self):
+        for i, player in enumerate(self.players.values()):
+            player.peak = self.player_histories[i].max()
+        finalize_scores(self.players, test=self._test)
         fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
         np.savez(fname, board=self.board, history=self.player_histories)
         self.show_results(fname.replace(".npz", ".pdf"))

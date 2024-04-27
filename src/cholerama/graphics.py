@@ -12,6 +12,7 @@ import numpy as np
 from . import config
 from .engine import Engine
 from .plot import plot
+from .scores import read_scores
 
 
 class Graphics:
@@ -101,7 +102,7 @@ class GraphicalEngine(Engine):
         self.fps = fps
         # print("self.fps", self.fps)
 
-    def update_leaderboard(self, scores):
+    def update_leaderboard(self, scores, peaks):
         sorted_scores = dict(
             sorted(scores.items(), key=lambda item: item[1], reverse=True)
         )
@@ -109,6 +110,14 @@ class GraphicalEngine(Engine):
             self.score_boxes[i].setText(
                 f'<div style="color:{self.players[name].color}">&#9632;</div> '
                 f"{i+1}. {name[:config.max_name_length]}: {score}"
+            )
+        sorted_peaks = dict(
+            sorted(peaks.items(), key=lambda item: item[1], reverse=True)
+        )
+        for i, name in enumerate(list(sorted_peaks.keys())[:3]):
+            self.peak_boxes[i].setText(
+                f'<div style="color:{self.players[name].color}">&#9632;</div> '
+                f"{i+1}. {name[:config.max_name_length]}: {peaks[name]}"
             )
 
     def update_tokenboard(self):
@@ -125,7 +134,7 @@ class GraphicalEngine(Engine):
         #         time = str(datetime.timedelta(seconds=int(t)))[2:]
         #     except OverflowError:
         #         time = "None"
-        #     self.fastest_boxes[i].setText(
+        #     self.peak_boxes[i].setText(
         #         f'<div style="color:{self.players[name].color}">&#9632;</div> '
         #         f"{i+1}. {name[:config.max_name_length]}: {time}"
         #     )
@@ -272,10 +281,10 @@ class GraphicalEngine(Engine):
         widget2_layout.addWidget(_make_separator())
 
         widget2_layout.addWidget(qw.QLabel("<b>Peak coverage:</b>"))
-        self.fastest_boxes = {}
+        self.peak_boxes = {}
         for i in range(3):
-            self.fastest_boxes[i] = qw.QLabel(f"{i + 1}.")
-            widget2_layout.addWidget(self.fastest_boxes[i])
+            self.peak_boxes[i] = qw.QLabel(f"{i + 1}.")
+            widget2_layout.addWidget(self.peak_boxes[i])
 
         widget2_layout.addWidget(_make_separator())
 
@@ -293,11 +302,11 @@ class GraphicalEngine(Engine):
         self.play_button.clicked.connect(self.toggle_pause)
         widget2_layout.addWidget(self.play_button)
 
-        self.update_leaderboard({name: 0 for name in self.players})
-        self.update_tokenboard()
         # self.update_leaderboard(
-        #     read_scores(self.players.keys(), test=self.test), self.fastest_times
+        #     {name: 0 for name in self.players}, {name: 0 for name in self.players}
         # )
+        self.update_leaderboard(*read_scores(self.players.keys(), test=self._test))
+        self.update_tokenboard()
 
         #     widget_layout.addWidget(header)
         #     footer = QWidget()
@@ -330,7 +339,8 @@ class GraphicalEngine(Engine):
         self.timer.setInterval(1000 // self.fps if self.fps is not None else 0)
         # self.timer.start()
         pg.exec()
-        self.shutdown()
+        # self.shutdown()
+        # self.update_leaderboard(*read_scores(self.players.keys(), test=self._test))
 
     def toggle_pause(self):
         if self.play_button.isChecked():
@@ -348,6 +358,8 @@ class GraphicalEngine(Engine):
     def update(self):
         self.niter += 1
         if self.niter > self.iterations:
+            self.shutdown()
+            self.update_leaderboard(*read_scores(self.players.keys(), test=self._test))
             self.timer.stop()
             return
         super().update(self.niter)

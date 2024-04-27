@@ -15,9 +15,9 @@ class Player:
     ):
         self.name = name
         self.number = number
-        self.score = 0
         self.color = color
         self.tokens = 0
+        self.peak = 0
 
         if isinstance(pattern, str):
             self.pattern = image_to_array(pattern)
