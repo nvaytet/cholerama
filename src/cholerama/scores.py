@@ -6,6 +6,16 @@ from typing import Dict
 from .player import Player
 
 
+def read_round() -> int:
+    fname = "scores.txt"
+    rounds_played = 0
+    if os.path.exists(fname):
+        with open(fname, "r") as f:
+            line = f.readline()
+        rounds_played = int(line.strip())
+    return rounds_played
+
+
 def read_scores(players: Dict[str, Player], test: bool) -> Dict[str, int]:
     scores = {p: 0 for p in players}
     peaks = {p: 0 for p in players}
@@ -13,7 +23,7 @@ def read_scores(players: Dict[str, Player], test: bool) -> Dict[str, int]:
     if os.path.exists(fname) and (not test):
         with open(fname, "r") as f:
             contents = f.readlines()
-        for line in contents:
+        for line in contents[1:]:
             name, score, peak = line.split(":")
             scores[name] = int(score.strip())
             peaks[name] = int(peak.strip())
@@ -22,7 +32,9 @@ def read_scores(players: Dict[str, Player], test: bool) -> Dict[str, int]:
 
 def _write_scores(scores: Dict[str, int], peaks: Dict[str, int]):
     fname = "scores.txt"
+    r = read_round()
     with open(fname, "w") as f:
+        f.write(f"{r + 1}\n")
         for name, score in scores.items():
             f.write(f"{name}: {score} : {peaks[name]}\n")
 

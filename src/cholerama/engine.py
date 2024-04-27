@@ -10,7 +10,7 @@ from . import config
 from .compute import evolve_board
 from .player import Player
 from .plot import plot
-from .scores import finalize_scores
+from .scores import finalize_scores, read_round
 from .tools import make_color, make_starting_positions
 
 
@@ -35,6 +35,7 @@ class Engine:
         self.safe = safe
         self.plot_results = plot_results
         self.token_interval = max(1, iterations // config.tokens_per_game)
+        self.rounds_played = read_round()
 
         self.board = np.zeros((config.ny, config.nx), dtype=int)
         self.new_board = self.board.copy()
@@ -58,6 +59,10 @@ class Engine:
             )
             self.players[bot.name] = player
             self.player_histories[i, 0] = player.ncells
+
+        self.bot_call_order = np.roll(
+            list(self.players.keys()), self.rounds_played % len(self.players)
+        )
 
         self.xoff = np.array([-1, 0, 1, -1, 1, -1, 0, 1])
         self.yoff = np.array([-1, -1, -1, 0, 0, 1, 1, 1])
@@ -102,7 +107,12 @@ class Engine:
 
     def call_player_bots(self, it: int):
         # TODO: Roll the order of players for each round
-        for name, player in ((n, p) for n, p in self.players.items() if p.ncells > 0):
+        # players = list(self.players.values())
+        for name in self.bot_call_order:
+            # for name, player in ((n, p) for n, p in self.players.items() if p.ncells > 0):
+            player = self.players[name]
+            if player.ncells == 0:
+                continue
             self.board.setflags(write=False)
             new_cells = None
             args = {

@@ -23,14 +23,14 @@ for name in [
 #     bot.name = name
 #     bots.append(bot)
 
-# for name in ["Puff", "Huff"]:
-#     bot = germ_bot.PufferBot()
-#     bot.name = name
-#     bots.append(bot)
+for name in ["Puff", "Huff"]:
+    bot = germ_bot.PufferBot()
+    bot.name = name
+    bots.append(bot)
 
 cholerama.play(
     bots=bots,  # List of bots to use
-    iterations=1000,  # Number of iterations to run
+    iterations=5000,  # Number of iterations to run
     fps=None,  # Frames per second
     plot_results=True,  # Save a figure of the results
     test=False,

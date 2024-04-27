@@ -19,8 +19,20 @@ def make_color(c: Union[int, str]) -> str:
     return mcolors.to_hex(c)
 
 
-def make_starting_positions(nplayers) -> list:
-    bound = max(config.pattern_size)
-    x = np.random.randint(bound, config.nx - bound, size=nplayers)
-    y = np.random.randint(bound, config.ny - bound, size=nplayers)
+def make_starting_positions(n) -> list:
+    dmin = 0
+    while dmin < (0.15 * (config.nx + config.ny) / 2):
+        x = np.random.randint(0, config.nx - config.pattern_size[1], size=n)
+        y = np.random.randint(0, config.ny - config.pattern_size[0], size=n)
+        x1 = np.broadcast_to(x, (n, n))
+        x2 = x1.T
+        y1 = np.broadcast_to(y, (n, n))
+        y2 = y1.T
+        dist = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+        dmin = dist[dist > 0].min()
+    #     print(dmin)
+
+    # bound = max(config.pattern_size)
+    # x = np.random.randint(bound, config.nx - bound, size=nplayers)
+    # y = np.random.randint(bound, config.ny - bound, size=nplayers)
     return list(zip(x, y))
