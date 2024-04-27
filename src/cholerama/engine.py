@@ -178,12 +178,12 @@ class Engine:
     def show_results(self, fname: str):
         if self.plot_results:
             fig, _ = plot(self.board, self.player_histories)
-            fig.savefig(fname.replace(".npz", ".pdf"))
+            fig.savefig(fname)
 
     def shutdown(self):
         fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
         np.savez(fname, board=self.board, history=self.player_histories)
-        self.show_results(fname)
+        self.show_results(fname.replace(".npz", ".pdf"))
         # if self.plot_results:
         #     fig, _ = plot(self.board, self.player_histories)
         #     fig.savefig(fname.replace(".npz", ".pdf"))
