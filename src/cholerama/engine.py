@@ -26,7 +26,6 @@ class Engine:
         seed: Optional[int] = None,
         plot_results: bool = False,
         nthreads: Optional[int] = None,
-        # fps: Optional[int] = 10,
     ):
         if nthreads is not None:
             set_num_threads(nthreads)
@@ -62,23 +61,10 @@ class Engine:
             self.players[bot.name] = player
             self.player_histories[i, 0] = player.ncells
 
-        # self.player_histories = np.zeros((len(self.players), config.iterations))
-
         self.xoff = np.array([-1, 0, 1, -1, 1, -1, 0, 1])
         self.yoff = np.array([-1, -1, -1, 0, 0, 1, 1, 1])
         self.neighbors = np.zeros(8, dtype=int)
-        self.xinds = np.empty((8,) + self.board.shape, dtype=int)
-        self.yinds = np.empty_like(self.xinds)
         self.neighbor_buffer = np.zeros(3, dtype=int)
-
-        for i, (xo, yo) in enumerate(zip(self.xoff, self.yoff)):
-            g = np.meshgrid(
-                (np.arange(config.nx) + xo) % config.nx,
-                (np.arange(config.ny) + yo) % config.ny,
-                indexing="xy",
-            )
-            self.xinds[i, ...] = g[0]
-            self.yinds[i, ...] = g[1]
 
         # Pre-compile numba function
         evolve_board(
@@ -97,28 +83,6 @@ class Engine:
         x = np.random.randint(bound, config.nx - bound, size=len(self.bots))
         y = np.random.randint(bound, config.ny - bound, size=len(self.bots))
         return list(zip(x, y))
-
-    # def execute_player_bot(self, player, t: float, dt: float):
-    #     instructions = None
-    #     args = {
-    #         "iteration": t,
-    #         "dt": dt,
-    #         "longitude": player.longitude,
-    #         "latitude": player.latitude,
-    #         "heading": player.heading,
-    #         "speed": player.speed,
-    #         "vector": player.get_vector(),
-    #         "forecast": self.forecast,
-    #         "map": self.map_proxy,
-    #     }
-    #     if self.safe:
-    #         try:
-    #             instructions = self.bots[player.team].run(**args)
-    #         except:  # noqa
-    #             pass
-    #     else:
-    #         instructions = self.bots[player.team].run(**args)
-    #     return instructions
 
     def add_player_new_cells(
         self, player: Player, new_cells: Tuple[np.ndarray, np.ndarray]
@@ -165,37 +129,6 @@ class Engine:
             if new_cells:
                 self.add_player_new_cells(player, new_cells)
 
-    def evolve_board(self):
-        neighbors = self.board[self.yinds, self.xinds]
-        neighbor_count = np.where(neighbors > 0, 1, 0).sum(axis=0)
-        # neighbor_count = np.clip(neighbors, 0, 1).sum(axis=0)
-
-        alive_mask = self.board > 0
-        alive_neighbor_count = np.where(alive_mask, neighbor_count, 0)
-
-        # # Apply rules
-        # new = np.where(
-        #     (alive_neighbor_count == 2) | (alive_neighbor_count == 3), self.board, 0
-        # )
-
-        # birth_mask = ~alive_mask & (neighbor_count == 3)
-        # # # Birth happens always when we have 3 neighbors. When sorted, the most common
-        # # # value will always be in position 7 (=-2).
-        # birth_values = np.sort(neighbors, axis=0)[-2]
-        # self.board = np.where(birth_mask, birth_values, new)
-
-        # Apply rules
-        self.board = np.where(
-            (alive_neighbor_count == 2) | (alive_neighbor_count == 3), self.board, 0
-        )
-
-        birth_mask = ~alive_mask & (neighbor_count == 3)
-        # Birth happens always when we have 3 neighbors. When sorted, the most common
-        # value will always be in position 7 (=-2).
-        birth_inds = np.where(birth_mask)
-        birth_values = np.sort(neighbors[:, birth_inds[0], birth_inds[1]], axis=0)[-2]
-        self.board[birth_inds[0], birth_inds[1]] = birth_values
-
     def show_results(self, fname: str):
         if self.plot_results:
             fig, _ = plot(self.board, self.player_histories)
@@ -208,16 +141,12 @@ class Engine:
         fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
         np.savez(fname, board=self.board, history=self.player_histories)
         self.show_results(fname.replace(".npz", ".pdf"))
-        # if self.plot_results:
-        #     fig, _ = plot(self.board, self.player_histories)
-        #     fig.savefig(fname.replace(".npz", ".pdf"))
 
     def update(self, it: int):
         if it % self.token_interval == 0:
             for player in self.players.values():
                 player.tokens += 1
         self.call_player_bots(it)
-        # self.evolve_board()
         evolve_board(
             self.board,
             self.new_board,
@@ -232,10 +161,8 @@ class Engine:
         for i, player in enumerate(self.players.values()):
             player.update(self.board)
             self.player_histories[i, it] = player.ncells
-            # player.ncells = np.sum(self.board == player.number)
 
     def run(self):
-        # self.initialize_time(start_time)
         for it in range(1, self.iterations + 1):
             self.update(it)
         print(f"Reached {it} iterations.")

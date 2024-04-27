@@ -1,15 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-import glob
-import importlib
 
 import cholerama
 import germ_bot
-
-# bots = []
-# for repo in glob.glob("*_bot"):
-#     module = importlib.import_module(f"{repo}")
-#     bots.append(module.Bot())
 
 bots = []
 for name in [
@@ -19,13 +12,6 @@ for name in [
     "Malaria",
     "Influenza",
     "Tuberculosis",
-    # "YellowFever",
-    # "Smallpox",
-    # "Measles",
-    # "Anthrax",
-    # "BubonicPlague",
-    # "Ebola",
-    # "HIV",
 ]:
     bot = germ_bot.Bot()
     bot.name = name

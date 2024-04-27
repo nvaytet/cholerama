@@ -27,13 +27,9 @@ def find_empty_patches(
     numpy array
         The [y, x] indices of the bottom-left corner of each empty patch.
     """
-    # valid = board == 0
     if isinstance(patch_size, int):
         patch_size = (patch_size, patch_size)
-    # return np.argwhere(sliding_window_view(valid, patch_size).all(axis=(-2, -1)))
     view = sliding_window_view(board, patch_size)[::skip, ::skip, ...]
-    # yy, xx = np.where(view.sum((2, 3)) == 0)
-    # yy*skip, xx*skip
     return np.argwhere(view.sum((2, 3)) == 0) * skip
 
 
