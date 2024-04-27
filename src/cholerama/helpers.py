@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Union, Tuple
+from typing import Tuple, Union
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view

@@ -15,7 +15,6 @@ def evolve_board(
     nx: int,
     ny: int,
 ):
-
     for j in prange(ny):
         for i in range(nx):
             # Get the values of the neighbors

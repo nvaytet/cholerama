@@ -1,19 +1,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import time
-from typing import Any, Dict, Optional, Tuple
+from typing import Optional, Tuple
 
 import numpy as np
-import matplotlib.colors as mcolors
 from numba import set_num_threads
-
 
 from . import config
 from .compute import evolve_board
 from .player import Player
 from .plot import plot
 from .scores import finalize_scores
-from .tools import make_color
+from .tools import make_color, make_starting_positions
 
 
 class Engine:
@@ -42,7 +40,7 @@ class Engine:
         self.new_board = self.board.copy()
 
         self.bots = {bot.name: bot for bot in bots}
-        starting_positions = self.make_starting_positions()
+        starting_positions = make_starting_positions(len(self.bots))
         self.players = {}
         self.player_histories = np.zeros(
             (len(self.bots), self.iterations + 1), dtype=int
@@ -77,12 +75,6 @@ class Engine:
             config.nx,
             config.ny,
         )
-
-    def make_starting_positions(self) -> list:
-        bound = max(config.pattern_size)
-        x = np.random.randint(bound, config.nx - bound, size=len(self.bots))
-        y = np.random.randint(bound, config.ny - bound, size=len(self.bots))
-        return list(zip(x, y))
 
     def add_player_new_cells(
         self, player: Player, new_cells: Tuple[np.ndarray, np.ndarray]

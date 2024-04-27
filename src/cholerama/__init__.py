@@ -17,4 +17,4 @@ def headless(*args, **kwargs):
     eng.run()
 
 
-__all__ = ["play", "headless", "load", "plot"]
+__all__ = ["play", "headless", "config", "load", "plot"]

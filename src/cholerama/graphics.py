@@ -4,7 +4,6 @@ from typing import Dict
 
 import matplotlib.colors as mcolors
 import numpy as np
-
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
 
@@ -27,7 +26,6 @@ class Graphics:
         players: Dict[str, Player],
         player_histories: np.ndarray,
     ):
-
         self.app = pg.mkQApp("Cholerama")
         self.window = pg.GraphicsLayoutWidget()
         self.window.setWindowTitle("Cholerama")
@@ -70,7 +68,6 @@ def _make_separator():
 
 
 class GraphicalEngine(Engine):
-
     def __init__(self, *args, fps: int = 15, **kwargs):
         super().__init__(*args, **kwargs)
 

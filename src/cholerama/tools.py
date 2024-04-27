@@ -3,7 +3,10 @@
 from typing import Union
 
 import matplotlib.colors as mcolors
+import numpy as np
 from matplotlib import colormaps
+
+from . import config
 
 
 def make_color(c: Union[int, str]) -> str:
@@ -14,3 +17,10 @@ def make_color(c: Union[int, str]) -> str:
     if isinstance(c, int):
         c = color_list[c % len(color_list)]
     return mcolors.to_hex(c)
+
+
+def make_starting_positions(nplayers) -> list:
+    bound = max(config.pattern_size)
+    x = np.random.randint(bound, config.nx - bound, size=nplayers)
+    y = np.random.randint(bound, config.ny - bound, size=nplayers)
+    return list(zip(x, y))

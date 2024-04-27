@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 
-import cholerama
 import germ_bot
+
+import cholerama
 
 bots = []
 for name in [
