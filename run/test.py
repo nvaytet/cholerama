@@ -41,15 +41,15 @@ for name in [
 #     bot.name = name
 #     bots.append(bot)
 
-cholerama.play(
-    bots=bots,  # List of bots to use
-    iterations=5000,  # Number of iterations to run
-    fps=None,  # Frames per second
-    plot_results=True,  # Save a figure of the results
-)
-
-# cholerama.headless(
+# cholerama.play(
 #     bots=bots,  # List of bots to use
-#     iterations=100,  # Number of iterations to run
-#     plot_results=False,  # Save a figure of the results
+#     iterations=1000,  # Number of iterations to run
+#     fps=None,  # Frames per second
+#     plot_results=True,  # Save a figure of the results
 # )
+
+cholerama.headless(
+    bots=bots,  # List of bots to use
+    iterations=1000,  # Number of iterations to run
+    plot_results=False,  # Save a figure of the results
+)

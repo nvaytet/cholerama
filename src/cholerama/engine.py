@@ -5,9 +5,11 @@ from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import matplotlib.colors as mcolors
+from numba import set_num_threads
 
 
 from . import config
+from .compute import evolve_board
 from .player import Player
 from .plot import plot
 from .tools import make_color
@@ -24,6 +26,7 @@ class Engine:
         plot_results: bool = False,
         # fps: Optional[int] = 10,
     ):
+        set_num_threads(14)
         if seed is not None:
             np.random.seed(seed)
 
@@ -36,6 +39,7 @@ class Engine:
         # self.fps = fps
 
         self.board = np.zeros((config.ny, config.nx), dtype=int)
+        self.new_board = self.board.copy()
 
         self.bots = {bot.name: bot for bot in bots}
         starting_positions = self.make_starting_positions()
@@ -57,10 +61,12 @@ class Engine:
 
         # self.player_histories = np.zeros((len(self.players), config.iterations))
 
-        self.xoff = [-1, 0, 1, -1, 1, -1, 0, 1]
-        self.yoff = [-1, -1, -1, 0, 0, 1, 1, 1]
+        self.xoff = np.array([-1, 0, 1, -1, 1, -1, 0, 1])
+        self.yoff = np.array([-1, -1, -1, 0, 0, 1, 1, 1])
+        self.neighbors = np.zeros(8, dtype=int)
         self.xinds = np.empty((8,) + self.board.shape, dtype=int)
         self.yinds = np.empty_like(self.xinds)
+        self.neighbor_buffer = np.zeros(3, dtype=int)
 
         for i, (xo, yo) in enumerate(zip(self.xoff, self.yoff)):
             g = np.meshgrid(
@@ -70,6 +76,18 @@ class Engine:
             )
             self.xinds[i, ...] = g[0]
             self.yinds[i, ...] = g[1]
+
+        # Pre-compile numba function
+        evolve_board(
+            self.board,
+            self.new_board,
+            self.xoff,
+            self.yoff,
+            self.neighbors,
+            self.neighbor_buffer,
+            config.nx,
+            config.ny,
+        )
 
     def make_starting_positions(self) -> list:
         bound = max(config.pattern_size)
@@ -193,7 +211,18 @@ class Engine:
             for player in self.players.values():
                 player.tokens += 1
         self.call_player_bots(it)
-        self.evolve_board()
+        # self.evolve_board()
+        evolve_board(
+            self.board,
+            self.new_board,
+            self.xoff,
+            self.yoff,
+            self.neighbors,
+            self.neighbor_buffer,
+            config.nx,
+            config.ny,
+        )
+        self.board, self.new_board = self.new_board, self.board
         for i, player in enumerate(self.players.values()):
             player.update(self.board)
             self.player_histories[i, it] = player.ncells
