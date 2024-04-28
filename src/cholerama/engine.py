@@ -157,7 +157,7 @@ class Engine:
 
     def update(self, it: int):
         if it % self.token_interval == 0:
-            for player in self.players.values():
+            for player in [p for p in self.players.values() if p.ncells > 0]:
                 player.tokens += 1
         self.call_player_bots(it)
         evolve_board(
