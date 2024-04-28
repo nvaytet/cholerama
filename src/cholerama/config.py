@@ -8,9 +8,10 @@ from typing import Tuple
 class Config:
     nx: int = 700
     ny: int = 600
-    pattern_size: Tuple[int] = (18, 36)
+    pattern_size: Tuple[int] = (36, 36)
     max_name_length: int = 30
-    tokens_per_game: int = 200
+    initial_tokens: int = 100
+    additional_tokens: int = 200
 
 
 config = Config()

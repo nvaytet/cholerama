@@ -34,8 +34,8 @@ class Engine:
         self._test = test
         self.safe = safe
         self.plot_results = plot_results
-        self.token_interval = max(1, iterations // config.tokens_per_game)
-        self.rounds_played = read_round()
+        self.token_interval = max(1, iterations // config.additional_tokens)
+        self.rounds_played = 0 if self._test else read_round()
 
         self.board = np.zeros((config.ny, config.nx), dtype=int)
         self.new_board = self.board.copy()
@@ -54,6 +54,17 @@ class Engine:
                 color=make_color(i if bot.color is None else bot.color),
             )
             p = player.pattern
+            if any(np.array(p.shape) > np.array(config.pattern_size)):
+                raise ValueError(
+                    f"Player {bot.name}: pattern size {p.shape} not allowed."
+                )
+            psum = np.sum(p)
+            if psum > config.initial_tokens:
+                raise ValueError(
+                    f"Player {bot.name}: pattern has more than "
+                    f"{config.initial_tokens} tokens."
+                )
+            player.tokens -= psum
             self.board[pos[1] : pos[1] + p.shape[0], pos[0] : pos[0] + p.shape[1]] = (
                 p * (i + 1)
             )

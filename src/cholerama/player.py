@@ -15,7 +15,7 @@ class Player:
         self.name = name
         self.number = number
         self.color = color
-        self.tokens = 0
+        self.tokens = config.initial_tokens
         self.peak = 0
 
         if isinstance(pattern, str):
