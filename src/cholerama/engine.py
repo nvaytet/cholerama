@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import time
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import numpy as np
 from numba import set_num_threads
@@ -17,7 +17,7 @@ from .tools import make_color, make_starting_positions
 class Engine:
     def __init__(
         self,
-        bots: list,
+        bots: Union[dict, list],
         iterations: int = 100,
         safe: bool = False,
         test: bool = True,
@@ -40,7 +40,21 @@ class Engine:
         self.board = np.zeros((config.ny, config.nx), dtype=int)
         self.new_board = self.board.copy()
 
-        self.bots = {bot.name: bot for bot in bots}
+        starting_positions = make_starting_positions(len(bots))
+
+        if isinstance(bots, dict):
+            self.bots = {
+                name: bot.Bot(number=i + 1, name=name, x=pos[0], y=pos[1])
+                for i, ((name, bot), pos) in enumerate(
+                    zip(bots.items(), starting_positions)
+                )
+            }
+        else:
+            self.bots = {
+                bot.AUTHOR: bot.Bot(number=i + 1, name=bot.AUTHOR, x=pos[0], y=pos[1])
+                for i, (bot, pos) in enumerate(zip(bots, starting_positions))
+            }
+
         starting_positions = make_starting_positions(len(self.bots))
         self.players = {}
         self.player_histories = np.zeros(

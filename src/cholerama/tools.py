@@ -24,6 +24,8 @@ def make_starting_positions(n) -> list:
     while dmin < (0.15 * (config.nx + config.ny) / 2):
         x = np.random.randint(0, config.nx - config.pattern_size[1], size=n)
         y = np.random.randint(0, config.ny - config.pattern_size[0], size=n)
+        if n == 1:
+            break
         x1 = np.broadcast_to(x, (n, n))
         x2 = x1.T
         y1 = np.broadcast_to(y, (n, n))

@@ -2,43 +2,39 @@
 
 
 import germ_bot
+import puffer_bot
 
 import cholerama
 
-bots = []
-for name in [
-    "Cholera",
-    "Typhoid",
-    "Dysentery",
-    "Malaria",
-    "Influenza",
-    "Tuberculosis",
-]:
-    bot = germ_bot.Bot()
-    bot.name = name
-    bots.append(bot)
+bots = {
+    name: germ_bot
+    for name in [
+        "Cholera",
+        "Typhoid",
+        "Dysentery",
+        "Malaria",
+        "Influenza",
+        "Tuberculosis",
+    ]
+}
 
-# for name in ["SpaceFiller", "AnotherFiller"]:
-#     bot = germ_bot.FillerBot()
-#     bot.name = name
-#     bots.append(bot)
+# # for name in ["SpaceFiller", "AnotherFiller"]:
+# #     bot = germ_bot.FillerBot(name=name, number=len(bots) + 1)
+# #     bots.append(bot)
 
-for name in ["Puff", "Huff"]:
-    bot = germ_bot.PufferBot()
-    bot.name = name
-    bots.append(bot)
+bots.update({name: puffer_bot for name in ["Puff", "Huff"]})
 
 cholerama.play(
     bots=bots,  # List of bots to use
     iterations=4000,  # Number of iterations to run
-    fps=30,  # Frames per second
+    fps=None,  # Frames per second
     plot_results=True,  # Save a figure of the results
     test=False,
 )
 
 # cholerama.headless(
 #     bots=bots,  # List of bots to use
-#     iterations=1000,  # Number of iterations to run
+#     iterations=4000,  # Number of iterations to run
 #     plot_results=False,  # Save a figure of the results
 #     nthreads=8,
 # )

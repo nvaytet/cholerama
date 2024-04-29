@@ -4,7 +4,7 @@ import numpy as np
 from numba import njit, prange
 
 
-@njit(parallel=True, cache=True)
+@njit(fastmath=True, parallel=True, boundscheck=False, cache=True)
 def evolve_board(
     old: np.ndarray,
     new: np.ndarray,
