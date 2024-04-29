@@ -147,11 +147,11 @@ class Engine:
             }
             if self.safe:
                 try:
-                    new_cells = self.bots[name].run(**args)
+                    new_cells = self.bots[name].iterate(**args)
                 except:  # noqa
                     pass
             else:
-                new_cells = self.bots[name].run(**args)
+                new_cells = self.bots[name].iterate(**args)
             self.board.setflags(write=True)
             if new_cells:
                 self.add_player_new_cells(player, new_cells)
