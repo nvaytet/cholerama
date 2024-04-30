@@ -172,11 +172,6 @@ class GraphicalEngine(Engine):
             self.timer.stop()
             self.play_button.setText("Play")
 
-    def show_results(self, fname: str):
-        if self.plot_results:
-            fig, _ = plot(self.board, self.player_histories, show=False)
-            fig.savefig(fname.replace(".npz", ".pdf"))
-
     def update(self):
         self.niter += 1
         if self.niter > self.iterations:

@@ -24,17 +24,17 @@ bots = {
 
 bots.update({name: puffer_bot for name in ["Puff", "Huff"]})
 
-cholerama.play(
-    bots=bots,  # List of bots to use
-    iterations=4000,  # Number of iterations to run
-    fps=None,  # Frames per second
-    plot_results=True,  # Save a figure of the results
-    test=False,
-)
-
-# cholerama.headless(
+# cholerama.play(
 #     bots=bots,  # List of bots to use
 #     iterations=4000,  # Number of iterations to run
-#     plot_results=False,  # Save a figure of the results
-#     nthreads=8,
+#     fps=None,  # Frames per second
+#     plot_results=True,  # Save a figure of the results
+#     test=False,
 # )
+
+cholerama.headless(
+    bots=bots,  # List of bots to use
+    iterations=500,  # Number of iterations to run
+    plot_results=False,  # Save a figure of the results
+    nthreads=12,
+)

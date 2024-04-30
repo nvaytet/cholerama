@@ -24,6 +24,7 @@ class Engine:
         test: bool = True,
         seed: Optional[int] = None,
         plot_results: bool = False,
+        show_results: bool = False,
         nthreads: Optional[int] = None,
     ):
         if nthreads is not None:
@@ -34,7 +35,8 @@ class Engine:
         self.iterations = iterations
         self._test = test
         self.safe = safe
-        self.plot_results = plot_results
+        self._plot_results = plot_results
+        self._show_results = show_results
         self.token_interval = max(1, iterations // config.additional_tokens)
         self.rounds_played = 0 if self._test else read_round()
 
@@ -69,17 +71,17 @@ class Engine:
                 color=make_color(i if bot.color is None else bot.color),
             )
             p = player.pattern
-            if any(np.array(p.shape) > np.array(config.pattern_size)):
-                raise ValueError(
-                    f"Player {bot.name}: pattern size {p.shape} not allowed."
-                )
-            psum = np.sum(p)
-            if psum > config.initial_tokens:
-                raise ValueError(
-                    f"Player {bot.name}: pattern has more than "
-                    f"{config.initial_tokens} tokens."
-                )
-            player.tokens -= psum
+            # if any(np.array(p.shape) > np.array(config.pattern_size)):
+            #     raise ValueError(
+            #         f"Player {bot.name}: pattern size {p.shape} not allowed."
+            #     )
+            # psum = np.sum(p)
+            # if psum > config.initial_tokens:
+            #     raise ValueError(
+            #         f"Player {bot.name}: pattern has more than "
+            #         f"{config.initial_tokens} tokens."
+            #     )
+            # player.tokens -= p.sum()
             self.board[pos[1] : pos[1] + p.shape[0], pos[0] : pos[0] + p.shape[1]] = (
                 p * (i + 1)
             )
@@ -152,10 +154,18 @@ class Engine:
             if new_cells:
                 self.add_player_new_cells(player, new_cells)
 
-    def show_results(self, fname: str):
-        if self.plot_results:
-            fig, _ = plot(self.board, self.player_histories)
-            fig.savefig(fname)
+    def view_results(self, fname: str):
+        if self._plot_results:
+            player_data = {
+                name: {"history": self.player_histories[i], "color": player.color}
+                for i, (name, player) in enumerate(self.players.items())
+            }
+            fig, _ = plot(
+                self.board,
+                player_data=player_data,
+                show=self._show_results,
+            )
+            fig.savefig(fname.replace(".npz", ".pdf"))
 
     def shutdown(self):
         for i, player in enumerate(self.players.values()):
@@ -163,7 +173,7 @@ class Engine:
         finalize_scores(self.players, test=self._test)
         fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
         np.savez(fname, board=self.board, history=self.player_histories)
-        self.show_results(fname.replace(".npz", ".pdf"))
+        self.view_results(fname)
 
     def update(self, it: int):
         if it % self.token_interval == 0:

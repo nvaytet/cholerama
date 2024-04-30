@@ -15,7 +15,6 @@ class Player:
         self.name = name
         self.number = number
         self.color = color
-        self.tokens = config.initial_tokens
         self.peak = 0
 
         if isinstance(pattern, str):
@@ -29,6 +28,14 @@ class Player:
                 f"Got {self.pattern.shape}."
             )
 
+        psum = np.sum(self.pattern)
+        if psum > config.initial_tokens:
+            raise ValueError(
+                f"Player {self.name}: pattern has more than "
+                f"{config.initial_tokens} tokens."
+            )
+
+        self.tokens = config.initial_tokens - psum
         self.ncells = np.sum(self.pattern > 0)
         self.history = []
 
