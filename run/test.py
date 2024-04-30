@@ -12,9 +12,9 @@ bots = {
         "Cholera",
         "Typhoid",
         "Dysentery",
-        "Malaria",
-        "Influenza",
-        "Tuberculosis",
+        "Ecoli",
+        "Tetanus",
+        "Pneumonia",
     ]
 }
 
