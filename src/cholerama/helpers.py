@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+from dataclasses import dataclass
 from typing import Tuple, Union
 
 import numpy as np
@@ -51,3 +52,9 @@ def image_to_array(image_path: str) -> np.ndarray:
     a = np.array(im)
     s = (a - 255).sum(axis=-1)
     return np.clip(s, 0, 1)
+
+
+@dataclass
+class Positions:
+    x: np.ndarray
+    y: np.ndarray

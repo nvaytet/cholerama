@@ -8,6 +8,7 @@ from numba import set_num_threads
 
 from . import config
 from .compute import evolve_board
+from .helpers import Positions
 from .player import Player
 from .plot import plot
 from .scores import finalize_scores, read_round
@@ -106,10 +107,8 @@ class Engine:
             config.ny,
         )
 
-    def add_player_new_cells(
-        self, player: Player, new_cells: Tuple[np.ndarray, np.ndarray]
-    ):
-        x, y = new_cells
+    def add_player_new_cells(self, player: Player, new_cells: Positions):
+        x, y = new_cells.x, new_cells.y
         ntok = len(x)
         ok = True
         if ntok != len(y):
@@ -131,10 +130,7 @@ class Engine:
             player.tokens -= ntok
 
     def call_player_bots(self, it: int):
-        # TODO: Roll the order of players for each round
-        # players = list(self.players.values())
         for name in self.bot_call_order:
-            # for name, player in ((n, p) for n, p in self.players.items() if p.ncells > 0):
             player = self.players[name]
             if player.ncells == 0:
                 continue

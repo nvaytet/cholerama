@@ -4,6 +4,7 @@
 from .config import config
 from .engine import Engine
 from .graphics import GraphicalEngine
+from .helpers import Positions
 from .plot import load, plot
 
 
@@ -17,4 +18,4 @@ def headless(*args, **kwargs):
     eng.run()
 
 
-__all__ = ["play", "headless", "config", "load", "plot"]
+__all__ = ["play", "headless", "config", "load", "plot", "Positions"]
