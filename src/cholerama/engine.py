@@ -200,3 +200,9 @@ class Engine:
             self.update(it)
         print(f"Reached {it} iterations.")
         self.shutdown()
+        return {
+            "board": self.board,
+            "history": {
+                name: self.player_histories[i] for i, name in enumerate(self.players)
+            },
+        }
