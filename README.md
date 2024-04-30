@@ -45,7 +45,8 @@ Conquer the largest surface on the board
 - Populate your 36x36 patch as you wish
 - You get to keep the extra tokens
 - Every iteration, you are free to place any number of tokens on an empty space on the board (you must still be alive)
-- Every 5 iterations, you receive an additional token (if you are still alive)
+- Every 20 iterations, you receive an additional token (if you are still alive)
+- This equates to 200 additional tokens during a round
 
 ### Scoring:
 
