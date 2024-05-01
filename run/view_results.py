@@ -12,10 +12,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    file = args.file
-
-    data = load(file)
-    plot(data["board"], data["history"])
+    plot(**load(args.file))
 
 
 if __name__ == "__main__":

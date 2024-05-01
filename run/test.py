@@ -35,6 +35,6 @@ bots.update({name: puffer_bot for name in ["Puff", "Huff"]})
 cholerama.headless(
     bots=bots,  # List of bots to use
     iterations=500,  # Number of iterations to run
-    plot_results=False,  # Save a figure of the results
+    show_results=False,  # Save a figure of the results
     nthreads=12,
 )

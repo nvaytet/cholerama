@@ -9,22 +9,33 @@ import numpy as np
 
 def load(file=None):
     if file is None:
-        file = glob.glob("results-*.npz")[-1]
-    board, history = np.load(file).values()
-    return {"board": board, "history": history}
+        file = sorted(glob.glob("results-*.npz"))[-1]
+    print("Loading:", file)
+    return {
+        key: value if value.shape else value[()] for key, value in np.load(file).items()
+    }
 
 
-def plot(board, player_data, show=True):
-    fig, ax = plt.subplots(2, 1, figsize=(10, 10))
-    cmap = mcolors.ListedColormap(
-        ["black"] + [p["color"] for p in player_data.values()]
-    )
+def plot(*, board, show=True, fname=None, **players):
+    plt.ioff()
+    fig, ax = plt.subplots(2, 1, figsize=(9, 9))
+    colors = {
+        name.removesuffix("_color"): c
+        for name, c in players.items()
+        if name.endswith("_color")
+    }
+    histories = {
+        name.removesuffix("_history"): h
+        for name, h in players.items()
+        if name.endswith("_history")
+    }
+    cmap = mcolors.ListedColormap(["black"] + list(colors.values()))
     ax[0].imshow(board, cmap=cmap, interpolation="none", origin="lower")
     ax[0].axis("off")
     ax[0].set_title("Final state")
 
-    for name, data in player_data.items():
-        ax[1].plot(data["history"], label=name, color=data["color"])
+    for name in colors:
+        ax[1].plot(histories[name], label=name, color=colors[name])
     ax[1].set_title("Number of cells")
     ax[1].set_xlabel("Iterations")
     ax[1].set_ylabel("Number of cells")
@@ -33,4 +44,6 @@ def plot(board, player_data, show=True):
     plt.tight_layout()
     if show:
         plt.show()
+    if fname is not None:
+        fig.savefig(fname.replace(".npz", ".pdf"))
     return fig, ax

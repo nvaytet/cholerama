@@ -8,13 +8,13 @@ from .helpers import Positions
 from .plot import load, plot
 
 
-def play(plot_results, **kwargs):
-    eng = GraphicalEngine(show_results=False, plot_results=plot_results, **kwargs)
+def play(**kwargs):
+    eng = GraphicalEngine(**kwargs)
     return eng.run()
 
 
-def headless(plot_results, **kwargs):
-    eng = Engine(show_results=plot_results, plot_results=True, **kwargs)
+def headless(**kwargs):
+    eng = Engine(**kwargs)
     return eng.run()
 
 

@@ -5,13 +5,13 @@ from typing import Dict
 import matplotlib.colors as mcolors
 import numpy as np
 
-# import pyqtgraph as pg
-# from pyqtgraph.Qt import QtCore
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore
 
-# try:
-#     from PyQt5 import QtWidgets as qw
-# except ImportError:
-#     from PySide2 import QtWidgets as qw
+try:
+    from PyQt5 import QtWidgets as qw
+except ImportError:
+    from PySide2 import QtWidgets as qw
 
 from . import config
 from .engine import Engine
@@ -26,7 +26,6 @@ class Graphics:
         players: Dict[str, Player],
         player_histories: np.ndarray,
     ):
-        import pyqtgraph as pg
 
         self.app = pg.mkQApp("Cholerama")
         self.window = pg.GraphicsLayoutWidget()
@@ -107,13 +106,6 @@ class GraphicalEngine(Engine):
             )
 
     def run(self):
-        import pyqtgraph as pg
-        from pyqtgraph.Qt import QtCore
-
-        try:
-            from PyQt5 import QtWidgets as qw
-        except ImportError:
-            from PySide2 import QtWidgets as qw
 
         main_window = qw.QMainWindow()
         main_window.setWindowTitle("Cholerama")

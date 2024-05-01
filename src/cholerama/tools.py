@@ -32,9 +32,4 @@ def make_starting_positions(n) -> list:
         y2 = y1.T
         dist = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
         dmin = dist[dist > 0].min()
-    #     print(dmin)
-
-    # bound = max(config.pattern_size)
-    # x = np.random.randint(bound, config.nx - bound, size=nplayers)
-    # y = np.random.randint(bound, config.ny - bound, size=nplayers)
     return list(zip(x, y))
