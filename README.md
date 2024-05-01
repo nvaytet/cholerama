@@ -25,7 +25,7 @@ Conquer the largest surface on the board
 
 ### During a round:
 
-- Bacterial evolution is governed by Conway’s Game of Life
+- Bacterial evolution is governed by **Conway’s Game of Life**
 - Begin on a small patch of board (36x36) with 100 cells
 - Run 4000 iterations
 - Winner is the one with most alive cells at the end
@@ -64,6 +64,7 @@ Conquer the largest surface on the board
 - Pick a name
 - Pick a color (optional)
 - Create a pattern with your 100 tokens: numpy array of 0s and 1s (at most 36x36 in size) or a path to an image (white = 0, black = 1)
+- Starting positions are randomized
 
 <img src="https://github.com/nvaytet/cholerama/assets/39047984/a98198e6-bec5-49ed-90e9-edf8e6d6f20b" width="200" />
 
@@ -77,8 +78,10 @@ Conquer the largest surface on the board
 #### Spawning new cells
 
 - You can return a set of (x, y) positions corresponding to new alive cells to be placed on the board (integers)
+- 1 cell costs 1 token
 - The locations for new cells on the board must be empty
 - The order in which bots apply their new cells cycles every round
+- The total number of additional tokens you'll receive during a round is 200
 
 ## Tips
 
