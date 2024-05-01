@@ -1,4 +1,4 @@
-![cholerama](https://github.com/nvaytet/cholerama/assets/39047984/dca39008-ae9d-47c7-8965-ac463bbb2cb5)
+![cholerama_banner](https://github.com/nvaytet/cholerama/assets/39047984/4c57c612-069b-4ebc-9a20-c23e568cd007)
 
 # cholerama
 
