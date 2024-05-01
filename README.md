@@ -68,6 +68,24 @@ Conquer the largest surface on the board
 
 <img src="https://github.com/nvaytet/cholerama/assets/39047984/a98198e6-bec5-49ed-90e9-edf8e6d6f20b" width="200" />
 
+```Py
+import numpy as np
+from cholerama import helpers, Positions
+
+AUTHOR = "YeastieBoys"  # This is your team name
+
+class Bot:
+    def __init__(self, number: int, name: str, x: int, y: int):
+        self.number = number  # Mandatory: this is your number on the board
+        self.name = name  # Mandatory: player name
+        self.color = None  # Optional
+
+        # If we make the pattern too sparse, it just dies quickly
+        self.pattern = np.random.randint(0, 2, (12, 12))
+        # The pattern can also be just an image (0=white, 1=black)
+        # self.pattern = "mypattern.png"
+```
+
 ### During iterations:
 
 #### You are provided with
@@ -82,6 +100,24 @@ Conquer the largest surface on the board
 - The locations for new cells on the board must be empty
 - The order in which bots apply their new cells cycles every round
 - The total number of additional tokens you'll receive during a round is 200
+
+```Py
+class Bot:
+    ...
+
+    def iterate(self, iteration: int, board: np.ndarray, tokens: int):
+        if tokens >= 5:
+            # Pick a random empty patch of size 3x3
+            empty_patches = helpers.find_empty_patches(board, (3, 3))
+            npatches = len(empty_patches)
+            if npatches == 0:
+                return None
+            # Make a glider
+            ind = np.random.randint(0, npatches)
+            x = np.array([1, 2, 0, 1, 2]) + empty_patches[ind, 1]
+            y = np.array([2, 1, 0, 0, 0]) + empty_patches[ind, 0]
+            return Positions(x=x, y=y)
+```
 
 ## Tips
 
