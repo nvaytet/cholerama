@@ -45,10 +45,10 @@ class Graphics:
         self.right_view.setLabel("left", text="Iterations")
         self.lines = []
         self.xhistory = np.arange(player_histories.shape[1])
-        for i in range(nplayers):
+        for i, p in enumerate(players):
             self.lines.append(
                 self.right_view.plot(
-                    player_histories[i], self.xhistory, pen=mcolors.to_hex(f"C{i}")
+                    player_histories[i], self.xhistory, pen=mcolors.to_hex(p.color)
                 )
             )
         self.window.ci.layout.setColumnMaximumWidth(1, 300)
