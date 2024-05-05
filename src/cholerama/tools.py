@@ -1,12 +1,23 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Union
+from multiprocessing.shared_memory import SharedMemory
+from typing import Tuple, Union
 
 import matplotlib.colors as mcolors
 import numpy as np
 from matplotlib import colormaps
 
 from . import config
+
+
+def array_from_shared_mem(
+    shared_mem: SharedMemory,
+    shared_data_dtype: np.dtype,
+    shared_data_shape: Tuple[int, ...],
+) -> np.ndarray:
+    arr = np.frombuffer(shared_mem.buf, dtype=shared_data_dtype)
+    arr = arr.reshape(shared_data_shape)
+    return arr
 
 
 def make_color(c: Union[int, str]) -> str:

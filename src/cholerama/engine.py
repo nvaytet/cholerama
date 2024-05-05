@@ -24,10 +24,10 @@ class Engine:
         test: bool = True,
         seed: Optional[int] = None,
         show_results: bool = False,
-        nthreads: Optional[int] = None,
+        # ncores: Optional[int] = None,
     ):
-        if nthreads is not None:
-            set_num_threads(nthreads)
+        # if ncores is not None:
+        #     set_num_threads(ncores)
         if seed is not None:
             np.random.seed(seed)
 
@@ -56,7 +56,7 @@ class Engine:
                 for i, (bot, pos) in enumerate(zip(bots, starting_positions))
             }
 
-        starting_positions = make_starting_positions(len(self.bots))
+        # starting_positions = make_starting_positions(len(self.bots))
         self.players = {}
         self.player_histories = np.zeros(
             (len(self.bots), self.iterations + 1), dtype=int
