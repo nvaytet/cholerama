@@ -66,7 +66,7 @@ Conquer the largest surface on the board
 - Create a pattern with your 100 tokens: numpy array of 0s and 1s (at most 36x36 in size) or a path to an image (white = 0, black = 1)
 - Starting positions are randomized
 
-<img src="https://github.com/nvaytet/cholerama/assets/39047984/a98198e6-bec5-49ed-90e9-edf8e6d6f20b" width="200" />
+![pattern](https://github.com/nvaytet/cholerama/assets/39047984/dc3147ee-55e3-425a-8f27-070de07ea9ad)
 
 ```Py
 import numpy as np
