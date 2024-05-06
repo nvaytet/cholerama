@@ -41,7 +41,7 @@ class Engine:
         self.board = np.zeros((config.ny, config.nx), dtype=int)
         self.new_board = self.board.copy()
 
-        starting_positions = make_starting_positions(len(bots))
+        starting_patches = make_starting_positions(len(bots))
 
         if isinstance(bots, dict):
             self.bots = {

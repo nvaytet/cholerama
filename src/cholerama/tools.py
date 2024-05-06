@@ -31,16 +31,26 @@ def make_color(c: Union[int, str]) -> str:
 
 
 def make_starting_positions(n) -> list:
-    dmin = 0
-    while dmin < (0.15 * (config.nx + config.ny) / 2):
-        x = np.random.randint(0, config.nx - config.pattern_size[1], size=n)
-        y = np.random.randint(0, config.ny - config.pattern_size[0], size=n)
-        if n == 1:
-            break
-        x1 = np.broadcast_to(x, (n, n))
-        x2 = x1.T
-        y1 = np.broadcast_to(y, (n, n))
-        y2 = y1.T
-        dist = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
-        dmin = dist[dist > 0].min()
-    return list(zip(x, y))
+    # possible starting row and column as tuples
+    stepx = config.nx // config.npatches[1]
+    stepy = config.ny // config.npatches[0]
+    inds = [
+        (i * stepx, j * stepy)
+        for i in range(config.npatches[0])
+        for j in range(config.npatches[1])
+    ]
+    return np.random.choice(inds, size=n, replace=False).tolist()
+
+    # dmin = 0
+    # while dmin < (0.15 * (config.nx + config.ny) / 2):
+    #     x = np.random.randint(0, config.nx - config.pattern_size[1], size=n)
+    #     y = np.random.randint(0, config.ny - config.pattern_size[0], size=n)
+    #     if n == 1:
+    #         break
+    #     x1 = np.broadcast_to(x, (n, n))
+    #     x2 = x1.T
+    #     y1 = np.broadcast_to(y, (n, n))
+    #     y2 = y1.T
+    #     dist = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+    #     dmin = dist[dist > 0].min()
+    # return list(zip(x, y))

@@ -14,7 +14,8 @@ from .graphics import Graphics
 
 # from .map import MapData
 from .player import Player
-from .tools import array_from_shared_mem
+from .scores import read_round
+from .tools import array_from_shared_mem, make_starting_positions
 
 
 # class Clock:
@@ -54,7 +55,27 @@ def play(bots, iterations, seed=None, start=None, safe=False, ncores=8, test=Tru
     board_old = np.zeros((config.ny, config.nx), dtype=int)
     board_new = board_old.copy()
 
-    starting_positions = make_starting_positions(len(bots))
+    # Divide the board into as many patches as there are players, and try to make the
+    # patches as square as possible
+
+    # decompose number of players into prime numbers
+    nplayers = len(bots)
+    factors = []
+    for i in range(2, nplayers + 1):
+        while nplayers % i == 0:
+            factors.append(i)
+            nplayers //= i
+    # now group the factors into 2 groups because the board is 2D. Try to make the
+    # groups as close to each other in size as possible, when multiplied together
+    group1 = []
+    group2 = []
+    for f in factors:
+        if np.prod(group1) < np.prod(group2):
+            group1.append(f)
+        else:
+            group2.append(f)
+
+    # starting_positions = make_starting_positions(len(bots))
 
     if isinstance(bots, dict):
         dict_of_bots = {
@@ -76,10 +97,13 @@ def play(bots, iterations, seed=None, start=None, safe=False, ncores=8, test=Tru
     # Split the board along the x dimension into n_sub_processes
     board_ind_start = np.linspace(0, config.nx, n_sub_processes + 1, dtype=int)
     player_histories = np.zeros((len(bots), iterations + 1), dtype=int)
+    game_flow = np.zeros(2, dtype=bool)  # pause, exit_from_graphics
 
     buffer_mapping = {
         "board_old": board_old,
         "board_new": board_new,
+        "player_histories": player_histories,
+        "game_flow": game_flow,
     }
 
     with SharedMemoryManager() as smm:
