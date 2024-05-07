@@ -3,14 +3,16 @@
 
 from .config import config
 from .engine import Engine
-from .graphics import GraphicalEngine
+
+# from .graphics import GraphicalEngine
 from .helpers import Positions
+from .main import play
 from .plot import load, plot
 
 
-def play(**kwargs):
-    eng = GraphicalEngine(**kwargs)
-    return eng.run()
+# def play(**kwargs):
+#     eng = GraphicalEngine(**kwargs)
+#     return eng.run()
 
 
 def headless(**kwargs):

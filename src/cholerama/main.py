@@ -15,7 +15,7 @@ from .graphics import Graphics
 # from .map import MapData
 from .player import Player
 from .scores import read_round
-from .tools import array_from_shared_mem, make_starting_positions
+from .tools import array_from_shared_mem, make_starting_positions, make_color
 
 
 # class Clock:
@@ -42,7 +42,7 @@ def spawn_engine(*args):
     engine.run()
 
 
-def play(bots, iterations, seed=None, start=None, safe=False, ncores=8, test=True):
+def play(bots, iterations, seed=None, fps=None, safe=False, test=True, ncores=8):
 
     # self.iterations = iterations
     # self._test = test
@@ -54,28 +54,30 @@ def play(bots, iterations, seed=None, start=None, safe=False, ncores=8, test=Tru
 
     board_old = np.zeros((config.ny, config.nx), dtype=int)
     board_new = board_old.copy()
+    player_histories = np.zeros((len(bots), iterations + 1), dtype=int)
 
     # Divide the board into as many patches as there are players, and try to make the
     # patches as square as possible
 
-    # decompose number of players into prime numbers
-    nplayers = len(bots)
-    factors = []
-    for i in range(2, nplayers + 1):
-        while nplayers % i == 0:
-            factors.append(i)
-            nplayers //= i
-    # now group the factors into 2 groups because the board is 2D. Try to make the
-    # groups as close to each other in size as possible, when multiplied together
-    group1 = []
-    group2 = []
-    for f in factors:
-        if np.prod(group1) < np.prod(group2):
-            group1.append(f)
-        else:
-            group2.append(f)
+    # # decompose number of players into prime numbers
+    # nplayers = len(bots)
+    # factors = []
+    # for i in range(2, nplayers + 1):
+    #     while nplayers % i == 0:
+    #         factors.append(i)
+    #         nplayers //= i
+    # # now group the factors into 2 groups because the board is 2D. Try to make the
+    # # groups as close to each other in size as possible, when multiplied together
+    # group1 = []
+    # group2 = []
+    # for f in factors:
+    #     if np.prod(group1) < np.prod(group2):
+    #         group1.append(f)
+    #     else:
+    #         group2.append(f)
 
-    # starting_positions = make_starting_positions(len(bots))
+    # # starting_positions = make_starting_positions(len(bots))
+    starting_positions = np.full((len(bots), 2), 100, dtype=int)
 
     if isinstance(bots, dict):
         dict_of_bots = {
@@ -91,13 +93,32 @@ def play(bots, iterations, seed=None, start=None, safe=False, ncores=8, test=Tru
         }
 
     # starting_positions = make_starting_positions(len(self.bots))
+    players = {}
+    # self.player_histories = np.zeros((len(self.bots), self.iterations + 1), dtype=int)
+    for i, (bot, pos) in enumerate(zip(dict_of_bots.values(), starting_positions)):
+        player = Player(
+            name=bot.name,
+            number=i + 1,
+            pattern=bot.pattern,
+            color=make_color(i if bot.color is None else bot.color),
+        )
+        p = player.pattern
+        board_old[pos[1] : pos[1] + p.shape[0], pos[0] : pos[0] + p.shape[1]] = p * (
+            i + 1
+        )
+        players[bot.name] = player
+        player_histories[i, 0] = player.ncells
+
+    # # starting_positions = make_starting_positions(len(self.bots))
 
     groups = np.array_split(list(bots.keys()), n_sub_processes)
 
     # Split the board along the x dimension into n_sub_processes
-    board_ind_start = np.linspace(0, config.nx, n_sub_processes + 1, dtype=int)
-    player_histories = np.zeros((len(bots), iterations + 1), dtype=int)
-    game_flow = np.zeros(2, dtype=bool)  # pause, exit_from_graphics
+    board_ind_start = np.linspace(0, config.ny, n_sub_processes + 1, dtype=int)
+    game_flow = np.zeros(n_sub_processes, dtype=bool)  # pause, exit_from_graphics
+
+    print("groups:", groups)
+    print("board_ind_start:", board_ind_start)
 
     buffer_mapping = {
         "board_old": board_old,
@@ -119,40 +140,33 @@ def play(bots, iterations, seed=None, start=None, safe=False, ncores=8, test=Tru
             target=spawn_graphics,
             args=(
                 players,
-                high_contrast,
-                {
-                    key: buffers[key]
-                    for key in (
-                        "tracer_positions",
-                        "player_positions",
-                        "game_flow",
-                        "player_status",
-                        "all_arrived",
-                        "all_shutdown",
-                    )
-                },
+                fps,
+                test,
+                buffers,
             ),
         )
 
         engines = []
-        bot_index_begin = 0
+        # bot_index_begin = 0
         for i, group in enumerate(groups):
             engines.append(
                 Process(
                     target=spawn_engine,
                     args=(
                         i,
-                        seed,
+                        board_ind_start[i],
+                        board_ind_start[i + 1],
                         {name: bots[name] for name in group},
                         {name: players[name] for name in group},
-                        bot_index_begin,
-                        buffers,
+                        iterations,
                         safe,
-                        world_map,
+                        test,
+                        seed,
+                        buffers,
                     ),
                 )
             )
-            bot_index_begin += len(group)
+            # bot_index_begin += len(group)
 
         graphics.start()
         for engine in engines:

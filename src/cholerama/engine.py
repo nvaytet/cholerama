@@ -12,18 +12,29 @@ from .helpers import Positions
 from .player import Player
 from .plot import plot
 from .scores import finalize_scores, read_round
-from .tools import make_color, make_starting_positions
+from .tools import make_color, array_from_shared_mem
 
 
 class Engine:
     def __init__(
         self,
-        bots: Union[dict, list],
-        iterations: int = 100,
-        safe: bool = False,
-        test: bool = True,
-        seed: Optional[int] = None,
-        show_results: bool = False,
+        # bots: Union[dict, list],
+        # iterations: int = 100,
+        # safe: bool = False,
+        # test: bool = True,
+        # seed: Optional[int] = None,
+        # show_results: bool = False,
+        pid: int,
+        jstart: int,
+        jend: int,
+        bots: dict,
+        players: dict,
+        iterations: int,
+        safe: bool,
+        test: bool,
+        seed: Optional[int],
+        # show_results: bool,
+        buffers,
         # ncores: Optional[int] = None,
     ):
         # if ncores is not None:
@@ -31,53 +42,66 @@ class Engine:
         if seed is not None:
             np.random.seed(seed)
 
+        self.pid = pid
+        self.jstart = jstart
+        self.jend = jend
+        self.bots = bots
+        self.players = players
+        self.buffers = {
+            key: array_from_shared_mem(*value) for key, value in buffers.items()
+        }
+
+        self.board_old = self.buffers["board_old"]
+        self.board_new = self.buffers["board_new"]
+        self.game_flow = self.buffers["game_flow"]
+
         self.iterations = iterations
         self._test = test
         self.safe = safe
-        self._show_results = show_results
+        # self._show_results = show_results
         self.token_interval = max(1, iterations // config.additional_tokens)
         self.rounds_played = 0 if self._test else read_round()
 
-        self.board = np.zeros((config.ny, config.nx), dtype=int)
-        self.new_board = self.board.copy()
+        # self.board = np.zeros((config.ny, config.nx), dtype=int)
+        # self.new_board = self.board.copy()
 
-        starting_patches = make_starting_positions(len(bots))
+        # starting_patches = make_starting_positions(len(bots))
 
-        if isinstance(bots, dict):
-            self.bots = {
-                name: bot.Bot(number=i + 1, name=name, x=pos[0], y=pos[1])
-                for i, ((name, bot), pos) in enumerate(
-                    zip(bots.items(), starting_positions)
-                )
-            }
-        else:
-            self.bots = {
-                bot.AUTHOR: bot.Bot(number=i + 1, name=bot.AUTHOR, x=pos[0], y=pos[1])
-                for i, (bot, pos) in enumerate(zip(bots, starting_positions))
-            }
+        # if isinstance(bots, dict):
+        #     self.bots = {
+        #         name: bot.Bot(number=i + 1, name=name, x=pos[0], y=pos[1])
+        #         for i, ((name, bot), pos) in enumerate(
+        #             zip(bots.items(), starting_positions)
+        #         )
+        #     }
+        # else:
+        #     self.bots = {
+        #         bot.AUTHOR: bot.Bot(number=i + 1, name=bot.AUTHOR, x=pos[0], y=pos[1])
+        #         for i, (bot, pos) in enumerate(zip(bots, starting_positions))
+        #     }
 
-        # starting_positions = make_starting_positions(len(self.bots))
-        self.players = {}
-        self.player_histories = np.zeros(
-            (len(self.bots), self.iterations + 1), dtype=int
-        )
-        for i, (bot, pos) in enumerate(zip(self.bots.values(), starting_positions)):
-            player = Player(
-                name=bot.name,
-                number=i + 1,
-                pattern=bot.pattern,
-                color=make_color(i if bot.color is None else bot.color),
-            )
-            p = player.pattern
-            self.board[pos[1] : pos[1] + p.shape[0], pos[0] : pos[0] + p.shape[1]] = (
-                p * (i + 1)
-            )
-            self.players[bot.name] = player
-            self.player_histories[i, 0] = player.ncells
+        # # starting_positions = make_starting_positions(len(self.bots))
+        # self.players = {}
+        # self.player_histories = np.zeros(
+        #     (len(self.bots), self.iterations + 1), dtype=int
+        # )
+        # for i, (bot, pos) in enumerate(zip(self.bots.values(), starting_positions)):
+        #     player = Player(
+        #         name=bot.name,
+        #         number=i + 1,
+        #         pattern=bot.pattern,
+        #         color=make_color(i if bot.color is None else bot.color),
+        #     )
+        #     p = player.pattern
+        #     self.board[pos[1] : pos[1] + p.shape[0], pos[0] : pos[0] + p.shape[1]] = (
+        #         p * (i + 1)
+        #     )
+        #     self.players[bot.name] = player
+        #     self.player_histories[i, 0] = player.ncells
 
-        self.bot_call_order = np.roll(
-            list(self.players.keys()), self.rounds_played % len(self.players)
-        )
+        # self.bot_call_order = np.roll(
+        #     list(self.players.keys()), self.rounds_played % len(self.players)
+        # )
 
         self.xoff = np.array([-1, 0, 1, -1, 1, -1, 0, 1])
         self.yoff = np.array([-1, -1, -1, 0, 0, 1, 1, 1])
@@ -86,12 +110,14 @@ class Engine:
 
         # Pre-compile numba function
         evolve_board(
-            self.board,
-            self.new_board,
+            self.board_old,
+            self.board_new,
             self.xoff,
             self.yoff,
             self.neighbors,
             self.neighbor_buffer,
+            self.jstart,
+            self.jend,
             config.nx,
             config.ny,
         )
@@ -164,21 +190,35 @@ class Engine:
         if it % self.token_interval == 0:
             for player in [p for p in self.players.values() if p.ncells > 0]:
                 player.tokens += 1
-        self.call_player_bots(it)
+        # self.call_player_bots(it)
         evolve_board(
-            self.board,
-            self.new_board,
+            self.board_old,
+            self.board_new,
             self.xoff,
             self.yoff,
             self.neighbors,
             self.neighbor_buffer,
+            self.jstart,
+            self.jend,
             config.nx,
             config.ny,
         )
-        self.board, self.new_board = self.new_board, self.board
-        for i, player in enumerate(self.players.values()):
-            player.update(self.board)
-            self.player_histories[i, it] = player.ncells
+        self.game_flow[self.pid] = 1
+        while 0 in self.game_flow:
+            pass
+        self.game_flow[self.pid] = 0
+        self.board_old[self.jstart : self.jend] = self.board_new[
+            self.jstart : self.jend
+        ]
+        self.game_flow[self.pid] = 1
+        while 0 in self.game_flow:
+            pass
+        self.game_flow[self.pid] = 0
+
+        # self.board, self.new_board = self.new_board, self.board
+        # for i, player in enumerate(self.players.values()):
+        #     player.update(self.board)
+        #     self.player_histories[i, it] = player.ncells
 
     def run(self):
         for it in range(1, self.iterations + 1):
