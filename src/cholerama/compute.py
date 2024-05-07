@@ -19,6 +19,8 @@ def evolve_board(
 ):
     for j in range(jstart, jend):
         for i in range(nx):
+            assert i >= 0
+            assert j >= 0
             # Get the values of the neighbors
             neighbor_count = 0
             for k in range(8):
