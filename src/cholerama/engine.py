@@ -171,24 +171,24 @@ class Engine:
             if new_cells:
                 self.add_player_new_cells(player, new_cells)
 
-    def shutdown(self):
-        for i, player in enumerate(self.players.values()):
-            player.peak = self.player_histories[i].max()
-        finalize_scores(self.players, test=self._test)
-        fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
-        results = {"board": self.board}
-        results.update(
-            {
-                f"{name}_history": self.player_histories[i]
-                for i, name in enumerate(self.players)
-            }
-        )
-        results.update(
-            {f"{name}_color": player.color for name, player in self.players.items()}
-        )
-        np.savez(fname, **results)
-        plot(fname=fname.replace(".npz", ".pdf"), show=self._show_results, **results)
-        return results
+    # def shutdown(self):
+    #     for i, player in enumerate(self.players.values()):
+    #         player.peak = self.player_histories[i].max()
+    #     finalize_scores(self.players, test=self._test)
+    #     fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
+    #     results = {"board": self.board_old}
+    #     results.update(
+    #         {
+    #             f"{name}_history": self.player_histories[i]
+    #             for i, name in enumerate(self.players)
+    #         }
+    #     )
+    #     results.update(
+    #         {f"{name}_color": player.color for name, player in self.players.items()}
+    #     )
+    #     np.savez(fname, **results)
+    #     plot(fname=fname.replace(".npz", ".pdf"), show=self._show_results, **results)
+    #     return results
 
     def update(self, it: int):
         if it % self.token_interval == 0:
@@ -227,11 +227,11 @@ class Engine:
         self.player_histories[:, it] = self.cell_counts
 
     def run(self):
-        while self.niter < self.iterations:
+        while self.niter < self.iterations and not self.game_flow[1]:
             if self.game_flow[0]:
                 self.niter += 1
                 self.update(self.niter)
         # for it in range(1, self.iterations + 1):
         #     self.update(it)
         print(f"Reached {self.niter} iterations.")
-        return self.shutdown()
+        # return self.shutdown()

@@ -10,12 +10,13 @@ from .helpers import image_to_array
 
 class Player:
     def __init__(
-        self, name: str, number: int, color: str, pattern: Union[np.ndarray, str]
+        self, name: str, number: int, color: str, pattern: Union[np.ndarray, str], patch
     ):
         self.name = name
         self.number = number
         self.color = color
         self.peak = 0
+        self.patch = patch
 
         # if isinstance(pattern, str):
         #     self.pattern = image_to_array(pattern)

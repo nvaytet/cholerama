@@ -14,7 +14,8 @@ from .graphics import Graphics
 
 # from .map import MapData
 from .player import Player
-from .scores import read_round
+from .plot import plot
+from .scores import read_round, finalize_scores
 from .tools import array_from_shared_mem, make_starting_positions, make_color
 
 
@@ -42,15 +43,17 @@ def spawn_engine(*args):
     engine.run()
 
 
-def play(bots, iterations, seed=None, fps=None, safe=False, test=True, ncores=8):
+def play(
+    bots, iterations, seed=None, fps=None, safe=False, test=True, show_results=False
+):
 
     # self.iterations = iterations
     # self._test = test
     # self.safe = safe
-    # self._show_results = show_results
+    # show_results = show_results
     # self.token_interval = max(1, iterations // config.additional_tokens)
-    n_sub_processes = max(ncores - 1, 1)
-    rounds_played = 0 if test else read_round()
+    # n_sub_processes = max(ncores - 1, 1)
+    # rounds_played = 0 if test else read_round()
 
     board_old = np.zeros((config.ny, config.nx), dtype=int)
     board_new = board_old.copy()
@@ -106,6 +109,7 @@ def play(bots, iterations, seed=None, fps=None, safe=False, test=True, ncores=8)
             number=i + 1,
             pattern=bot.pattern,
             color=make_color(i if bot.color is None else bot.color),
+            patch=patch,
         )
         p = player.pattern
         x, y = p.x, p.y
@@ -123,14 +127,14 @@ def play(bots, iterations, seed=None, fps=None, safe=False, test=True, ncores=8)
 
     # # starting_positions = make_starting_positions(len(self.bots))
 
-    groups = np.array_split(list(bots.keys()), n_sub_processes)
+    # groups = np.array_split(list(bots.keys()), n_sub_processes)
 
-    # Split the board along the x dimension into n_sub_processes
-    board_ind_start = np.linspace(0, config.ny, n_sub_processes + 1, dtype=int)
+    # # Split the board along the x dimension into n_sub_processes
+    # board_ind_start = np.linspace(0, config.ny, n_sub_processes + 1, dtype=int)
     game_flow = np.zeros(2, dtype=bool)  # pause, exit_from_graphics
 
-    print("groups:", groups)
-    print("board_ind_start:", board_ind_start)
+    # print("groups:", groups)
+    # print("board_ind_start:", board_ind_start)
 
     buffer_mapping = {
         "board_old": board_old,
@@ -140,13 +144,21 @@ def play(bots, iterations, seed=None, fps=None, safe=False, test=True, ncores=8)
         "game_flow": game_flow,
     }
 
+    results = {"board": board_old}
+    results.update(
+        {f"{name}_history": player_histories[i] for i, name in enumerate(players)}
+    )
+    results.update({f"{name}_color": player.color for name, player in players.items()})
+
+    shared_arrays = {}
+
     with SharedMemoryManager() as smm:
 
         buffers = {}
         for key, arr in buffer_mapping.items():
             mem = smm.SharedMemory(size=arr.nbytes)
-            arr_shared = array_from_shared_mem(mem, arr.dtype, arr.shape)
-            arr_shared[...] = arr
+            shared_arrays[key] = array_from_shared_mem(mem, arr.dtype, arr.shape)
+            shared_arrays[key][...] = arr
             buffers[key] = (mem, arr.dtype, arr.shape)
 
         graphics = Process(
@@ -175,6 +187,7 @@ def play(bots, iterations, seed=None, fps=None, safe=False, test=True, ncores=8)
                 safe,
                 test,
                 seed,
+                # show_results,
                 buffers,
             ),
         )
@@ -187,3 +200,16 @@ def play(bots, iterations, seed=None, fps=None, safe=False, test=True, ncores=8)
         graphics.join()
         # for engine in engines:
         engine.join()
+
+        # shutdown
+        for i, player in enumerate(players.values()):
+            player.peak = shared_arrays["player_histories"][i].max()
+        finalize_scores(players, test=test)
+        fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
+        results["board"][...] = shared_arrays["board_old"][...]
+        for i, name in enumerate(players):
+            results[f"{name}_history"][...] = shared_arrays["player_histories"][i][...]
+
+    np.savez(fname, **results)
+    plot(fname=fname.replace(".npz", ".pdf"), show=show_results, **results)
+    return results

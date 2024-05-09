@@ -59,6 +59,41 @@ class Graphics:
         self.image = pg.ImageItem(image=self.cmap(self.board.T))
         self.left_view.addItem(self.image)
 
+        self.outlines = []
+        stepx = config.nx // config.npatches[1]
+        stepy = config.ny // config.npatches[0]
+        lw = 5
+        for i, p in enumerate(self.players.values()):
+            outl_x = np.array(
+                [
+                    p.patch[1] * stepx + lw / 2,
+                    (p.patch[1] + 1) * stepx - lw / 2,
+                    (p.patch[1] + 1) * stepx - lw / 2,
+                    p.patch[1] * stepx + lw / 2,
+                    p.patch[1] * stepx + lw / 2,
+                ]
+            )
+            outl_y = np.array(
+                [
+                    p.patch[0] * stepy + lw / 2,
+                    p.patch[0] * stepy + lw / 2,
+                    (p.patch[0] + 1) * stepy - lw / 2,
+                    (p.patch[0] + 1) * stepy - lw / 2,
+                    p.patch[0] * stepy + lw / 2,
+                ]
+            )
+            # c = mcolors.to_rgba(p.color)
+            # c[-1]
+            self.outlines.append(
+                pg.PlotCurveItem(
+                    outl_x,
+                    outl_y,
+                    pen=pg.mkPen(mcolors.to_hex(p.color), width=lw),
+                )
+            )
+            # self.outlines[-1].setAlpha(0.5)
+            self.left_view.addItem(self.outlines[-1])
+
         self.right_view = self.window.addPlot(row=None, col=1)
         self.right_view.setMouseEnabled(x=False)
         self.right_view.setLabel("bottom", text="Number of cells")
@@ -72,8 +107,6 @@ class Graphics:
                 )
             )
         self.window.ci.layout.setColumnMaximumWidth(1, 300)
-
-        return
 
     def update(self):
         self.image.setImage(self.cmap(self.board.T))
@@ -179,10 +212,13 @@ class Graphics:
         # self.timer.setInterval(0)
         self.timer.start()
         pg.exec()
+        self.buffers["game_flow"][1] = True
 
     def toggle_pause(self):
         if self.play_button.isChecked():
             # self.timer.start()
+            for outline in self.outlines:
+                outline.setVisible(False)
             self.buffers["game_flow"][0] = True
             self.play_button.setText("Pause")
         else:
