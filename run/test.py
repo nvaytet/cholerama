@@ -33,7 +33,7 @@ cholerama.play(
     fps=30,  # Frames per second
     # plot_results=True,  # Save a figure of the results
     test=False,
-    ncores=3,
+    ncores=8,
 )
 
 # cholerama.headless(

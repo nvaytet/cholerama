@@ -77,7 +77,7 @@ def play(bots, iterations, seed=None, fps=None, safe=False, test=True, ncores=8)
     #         group2.append(f)
 
     # # starting_positions = make_starting_positions(len(bots))
-    starting_positions = np.full((len(bots), 2), 100, dtype=int)
+    starting_positions = np.full((len(bots), 2), 500, dtype=int)
 
     if isinstance(bots, dict):
         dict_of_bots = {

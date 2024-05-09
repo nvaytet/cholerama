@@ -203,17 +203,17 @@ class Engine:
             config.nx,
             config.ny,
         )
-        self.game_flow[self.pid] = 1
-        while 0 in self.game_flow:
+        self.game_flow[self.pid] = True
+        while False in self.game_flow:
             pass
-        self.game_flow[self.pid] = 0
+        self.game_flow[self.pid] = False
         self.board_old[self.jstart : self.jend] = self.board_new[
             self.jstart : self.jend
         ]
-        self.game_flow[self.pid] = 1
-        while 0 in self.game_flow:
+        self.game_flow[self.pid] = True
+        while False in self.game_flow:
             pass
-        self.game_flow[self.pid] = 0
+        self.game_flow[self.pid] = False
 
         # self.board, self.new_board = self.new_board, self.board
         # for i, player in enumerate(self.players.values()):
