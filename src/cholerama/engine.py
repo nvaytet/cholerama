@@ -24,9 +24,9 @@ class Engine:
         # test: bool = True,
         # seed: Optional[int] = None,
         # show_results: bool = False,
-        pid: int,
-        jstart: int,
-        jend: int,
+        # pid: int,
+        # jstart: int,
+        # jend: int,
         bots: dict,
         players: dict,
         iterations: int,
@@ -42,9 +42,10 @@ class Engine:
         if seed is not None:
             np.random.seed(seed)
 
-        self.pid = pid
-        self.jstart = jstart
-        self.jend = jend
+        # self.pid = pid
+        # self.jstart = jstart
+        # self.jend = jend
+        self.niter = 0
         self.bots = bots
         self.players = players
         self.buffers = {
@@ -53,7 +54,9 @@ class Engine:
 
         self.board_old = self.buffers["board_old"]
         self.board_new = self.buffers["board_new"]
+        self.player_histories = self.buffers["player_histories"]
         self.game_flow = self.buffers["game_flow"]
+        self.cell_counts = np.zeros(len(self.bots), dtype=int)
 
         self.iterations = iterations
         self._test = test
@@ -116,8 +119,9 @@ class Engine:
             self.yoff,
             self.neighbors,
             self.neighbor_buffer,
-            self.jstart,
-            self.jend,
+            self.cell_counts,
+            # self.jstart,
+            # self.jend,
             config.nx,
             config.ny,
         )
@@ -198,30 +202,36 @@ class Engine:
             self.yoff,
             self.neighbors,
             self.neighbor_buffer,
-            self.jstart,
-            self.jend,
+            self.cell_counts,
+            # self.jstart,
+            # self.jend,
             config.nx,
             config.ny,
         )
-        self.game_flow[self.pid] = True
-        while False in self.game_flow:
-            pass
-        self.game_flow[self.pid] = False
-        self.board_old[self.jstart : self.jend] = self.board_new[
-            self.jstart : self.jend
-        ]
-        self.game_flow[self.pid] = True
-        while False in self.game_flow:
-            pass
-        self.game_flow[self.pid] = False
+        # self.game_flow[self.pid] = True
+        # while False in self.game_flow:
+        #     pass
+        # self.game_flow[self.pid] = False
+        # self.board_old[self.jstart : self.jend] = self.board_new[
+        #     self.jstart : self.jend
+        # ]
+        # self.game_flow[self.pid] = True
+        # while False in self.game_flow:
+        #     pass
+        # self.game_flow[self.pid] = False
+        self.board_old[...] = self.board_new[...]
 
         # self.board, self.new_board = self.new_board, self.board
         # for i, player in enumerate(self.players.values()):
-        #     player.update(self.board)
-        #     self.player_histories[i, it] = player.ncells
+        # player.update(ncells=self.cell_counts[i])
+        self.player_histories[:, it] = self.cell_counts
 
     def run(self):
-        for it in range(1, self.iterations + 1):
-            self.update(it)
-        print(f"Reached {it} iterations.")
+        while self.niter < self.iterations:
+            if self.game_flow[0]:
+                self.niter += 1
+                self.update(self.niter)
+        # for it in range(1, self.iterations + 1):
+        #     self.update(it)
+        print(f"Reached {self.niter} iterations.")
         return self.shutdown()

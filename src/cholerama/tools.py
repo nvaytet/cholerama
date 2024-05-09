@@ -32,14 +32,15 @@ def make_color(c: Union[int, str]) -> str:
 
 def make_starting_positions(n) -> list:
     # possible starting row and column as tuples
-    stepx = config.nx // config.npatches[1]
-    stepy = config.ny // config.npatches[0]
+    # stepx = config.nx // config.npatches[1]
+    # stepy = config.ny // config.npatches[0]
     inds = [
-        (i * stepx, j * stepy)
-        for i in range(config.npatches[0])
-        for j in range(config.npatches[1])
+        (j, i) for j in range(config.npatches[0]) for i in range(config.npatches[1])
     ]
-    return np.random.choice(inds, size=n, replace=False).tolist()
+    print(np.shape(inds))
+
+    choices = np.random.choice(range(len(inds)), size=n, replace=False)
+    return [inds[i] for i in choices]
 
     # dmin = 0
     # while dmin < (0.15 * (config.nx + config.ny) / 2):

@@ -4,7 +4,7 @@ import numpy as np
 from numba import njit, prange
 
 
-@njit(boundscheck=False, cache=True)
+@njit(boundscheck=False, cache=True, fastmath=True, parallel=True)
 def evolve_board(
     old: np.ndarray,
     new: np.ndarray,
@@ -12,16 +12,17 @@ def evolve_board(
     yoff: np.ndarray,
     neighbors: np.ndarray,
     buffer: np.ndarray,
-    jstart: int,
-    jend: int,
+    cell_counts: np.ndarray,
+    # jstart: int,
+    # jend: int,
     nx: int,
     ny: int,
 ):
-    for j in range(jstart, jend):
+    for j in prange(ny):
         for i in range(nx):
-            # See https://stackoverflow.com/a/72465167
-            assert i >= 0
-            assert j >= 0
+            # # See https://stackoverflow.com/a/72465167
+            # assert i >= 0
+            # assert j >= 0
             # Get the values of the neighbors
             neighbor_count = 0
             for k in range(8):
@@ -46,3 +47,6 @@ def evolve_board(
                     new[j, i] = buffer[1]
             else:
                 new[j, i] = 0
+
+    # Update cell counts
+    cell_counts[...] = np.bincount(new.ravel())[1:]

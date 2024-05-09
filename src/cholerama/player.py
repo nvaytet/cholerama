@@ -17,10 +17,12 @@ class Player:
         self.color = color
         self.peak = 0
 
-        if isinstance(pattern, str):
-            self.pattern = image_to_array(pattern)
-        else:
-            self.pattern = np.asarray(pattern)
+        # if isinstance(pattern, str):
+        #     self.pattern = image_to_array(pattern)
+        # else:
+        #     self.pattern = np.asarray(pattern)
+
+        self.pattern = pattern
 
         # if any(np.array(self.pattern.shape) > np.array(config.pattern_size)):
         #     raise ValueError(
@@ -28,16 +30,18 @@ class Player:
         #         f"Got {self.pattern.shape}."
         #     )
 
-        psum = np.sum(self.pattern)
+        self.ncells = len(self.pattern)
         # if psum > config.initial_tokens:
         #     raise ValueError(
         #         f"Player {self.name}: pattern has more than "
         #         f"{config.initial_tokens} tokens."
         #     )
 
-        self.tokens = config.initial_tokens  # - psum
-        self.ncells = np.sum(self.pattern > 0)
+        self.tokens = config.initial_tokens - self.ncells
+        # self.ncells = np.sum(self.pattern > 0)
         self.history = []
 
-    def update(self, board: np.ndarray):
-        self.ncells = np.sum(board == self.number)
+    # def update(self, board: np.ndarray):
+    #     self.ncells = np.sum(board == self.number)
+    def update(self, ncells: int):
+        self.ncells = ncells

@@ -58,3 +58,6 @@ def image_to_array(image_path: str) -> np.ndarray:
 class Positions:
     x: np.ndarray
     y: np.ndarray
+
+    def __len__(self):
+        return len(self.x)

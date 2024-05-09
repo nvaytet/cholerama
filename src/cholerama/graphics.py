@@ -77,8 +77,8 @@ class Graphics:
 
     def update(self):
         self.image.setImage(self.cmap(self.board.T))
-        # for i, hist in enumerate(histories):
-        #     self.lines[i].setData(hist[:], self.xhistory)
+        for i, hist in enumerate(self.player_histories):
+            self.lines[i].setData(hist[:], self.xhistory)
 
     # class GraphicalEngine(Engine):
     #     def __init__(self, *args, fps: int = 15, **kwargs):
@@ -121,7 +121,7 @@ class Graphics:
 
         main_window = qw.QMainWindow()
         main_window.setWindowTitle("Cholerama")
-        main_window.setGeometry(0, 0, 1200, 700)
+        main_window.setGeometry(0, 0, 1280, 800)
 
         # Create a central widget to hold the two widgets
         central_widget = qw.QWidget()
@@ -182,10 +182,12 @@ class Graphics:
 
     def toggle_pause(self):
         if self.play_button.isChecked():
-            self.timer.start()
+            # self.timer.start()
+            self.buffers["game_flow"][0] = True
             self.play_button.setText("Pause")
         else:
-            self.timer.stop()
+            # self.timer.stop()
+            self.buffers["game_flow"][0] = False
             self.play_button.setText("Play")
 
     # def update(self):
