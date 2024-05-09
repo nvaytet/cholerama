@@ -6,17 +6,17 @@ import puffer_bot
 
 import cholerama
 
-# bots = {
-#     name: germ_bot
-#     for name in [
-#         "Cholera",
-#         "Typhoid",
-#         "Dysentery",
-#         "Ecoli",
-#         "Tetanus",
-#         "Pneumonia",
-#     ]
-# }
+bots = {
+    name: germ_bot
+    for name in [
+        "Cholera",
+        "Typhoid",
+        "Dysentery",
+        "Ecoli",
+        "Tetanus",
+        "Pneumonia",
+    ]
+}
 
 # # # for name in ["SpaceFiller", "AnotherFiller"]:
 # # #     bot = germ_bot.FillerBot(name=name, number=len(bots) + 1)
@@ -24,7 +24,7 @@ import cholerama
 
 # bots.update({name: puffer_bot for name in ["Puff", "Huff"]})
 
-bots = {germ_bot.AUTHOR: germ_bot}
+# bots = {germ_bot.AUTHOR: germ_bot}
 
 cholerama.play(
     bots=bots,  # List of bots to use
