@@ -59,5 +59,9 @@ class Positions:
     x: np.ndarray
     y: np.ndarray
 
+    def __post_init__(self):
+        if len(self.x) != len(self.y):
+            raise ValueError("x and y must have the same length.")
+
     def __len__(self):
         return len(self.x)

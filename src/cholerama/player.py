@@ -5,7 +5,7 @@ from typing import Union
 import numpy as np
 
 from . import config
-from .helpers import image_to_array
+from .helpers import image_to_array, Positions
 
 
 class Player:
@@ -18,12 +18,30 @@ class Player:
         self.peak = 0
         self.patch = patch
 
-        # if isinstance(pattern, str):
-        #     self.pattern = image_to_array(pattern)
-        # else:
-        #     self.pattern = np.asarray(pattern)
-
         self.pattern = pattern
+        if isinstance(self.pattern, str):
+            array = image_to_array(self.pattern)
+            xy = np.where(array > 0)
+            self.pattern = Positions(x=xy[1], y=xy[0])
+        if not isinstance(self.pattern, Positions):
+            raise ValueError("Pattern must be an instance of Positions.")
+
+        if len(self.pattern) > config.initial_tokens:
+            raise ValueError(
+                f"Too many tokens used in pattern by Player {self.name}: "
+                f"{len(self.pattern)} > {config.initial_tokens}."
+            )
+
+        patch_size = (config.nx // config.npatches[1], config.ny // config.npatches[0])
+        if (
+            (self.pattern.x.min() < 0)
+            or (self.pattern.x.max() >= patch_size[1])
+            or (self.pattern.y.min() < 0)
+            or (self.pattern.y.max() >= patch_size[0])
+        ):
+            raise ValueError(
+                f"Pattern indices must be positive and contained in size {patch_size}. "
+            )
 
         # if any(np.array(self.pattern.shape) > np.array(config.pattern_size)):
         #     raise ValueError(
