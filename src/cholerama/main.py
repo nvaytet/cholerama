@@ -101,8 +101,8 @@ def play(
     # starting_positions = make_starting_positions(len(self.bots))
     players = {}
     # self.player_histories = np.zeros((len(self.bots), self.iterations + 1), dtype=int)
-    stepx = config.nx // config.npatches[1]
-    stepy = config.ny // config.npatches[0]
+    # stepx = config.nx // config.npatches[1]
+    # stepy = config.ny // config.npatches[0]
     for i, (bot, patch) in enumerate(zip(dict_of_bots.values(), starting_patches)):
         player = Player(
             name=bot.name,
@@ -114,8 +114,8 @@ def play(
         p = player.pattern
         x, y = p.x, p.y
         # print(x, y)
-        x = (np.asarray(x) + (patch[1] * stepx)) % config.nx
-        y = (np.asarray(y) + (patch[0] * stepy)) % config.ny
+        x = ((np.asarray(x) % config.stepx) + (patch[1] * config.stepx)) % config.nx
+        y = ((np.asarray(y) % config.stepy) + (patch[0] * config.stepy)) % config.ny
         # print(x, y)
         board_old[y, x] = player.number
 
@@ -181,7 +181,7 @@ def play(
                 # i,
                 # board_ind_start[i],
                 # board_ind_start[i + 1],
-                bots,
+                dict_of_bots,
                 players,
                 iterations,
                 safe,

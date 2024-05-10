@@ -60,28 +60,16 @@ class Graphics:
         self.left_view.addItem(self.image)
 
         self.outlines = []
-        stepx = config.nx // config.npatches[1]
-        stepy = config.ny // config.npatches[0]
+        # stepx = config.nx // config.npatches[1]
+        # stepy = config.ny // config.npatches[0]
         lw = 5
         for i, p in enumerate(self.players.values()):
-            outl_x = np.array(
-                [
-                    p.patch[1] * stepx + lw / 2,
-                    (p.patch[1] + 1) * stepx - lw / 2,
-                    (p.patch[1] + 1) * stepx - lw / 2,
-                    p.patch[1] * stepx + lw / 2,
-                    p.patch[1] * stepx + lw / 2,
-                ]
-            )
-            outl_y = np.array(
-                [
-                    p.patch[0] * stepy + lw / 2,
-                    p.patch[0] * stepy + lw / 2,
-                    (p.patch[0] + 1) * stepy - lw / 2,
-                    (p.patch[0] + 1) * stepy - lw / 2,
-                    p.patch[0] * stepy + lw / 2,
-                ]
-            )
+            x1 = p.patch[1] * config.stepx + lw / 2
+            x2 = (p.patch[1] + 1) * config.stepx - lw / 2
+            y1 = p.patch[0] * config.stepy + lw / 2
+            y2 = (p.patch[0] + 1) * config.stepy - lw / 2
+            outl_x = np.array([x1, x2, x2, x1, x1])
+            outl_y = np.array([y1, y1, y2, y2, y1])
             # c = mcolors.to_rgba(p.color)
             # c[-1]
             self.outlines.append(

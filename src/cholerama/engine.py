@@ -139,35 +139,46 @@ class Engine:
                 f"has {player.tokens}."
             )
             ok = False
-        x = np.asarray(x) % config.nx
-        y = np.asarray(y) % config.ny
-        if self.board[y, x].sum() > 0:
+        # x = np.asarray(x) % config.nx
+        # y = np.asarray(y) % config.ny
+        x = (
+            (np.asarray(x) % config.stepx) + (player.patch[1] * config.stepx)
+        ) % config.nx
+        y = (
+            (np.asarray(y) % config.stepy) + (player.patch[0] * config.stepy)
+        ) % config.ny
+        if self.board_old[y, x].sum() > 0:
             print(f"Player {player.name}: cannot overwrite alive cells.")
             ok = False
         if ok:
-            self.board[y, x] = player.number
+            self.board_old[y, x] = player.number
             player.tokens -= ntok
 
     def call_player_bots(self, it: int):
-        for name in self.bot_call_order:
-            player = self.players[name]
+        # for name in self.bot_call_order:
+        #     player = self.players[name]
+        for bot, player in zip(self.bots.values(), self.players.values()):
             if player.ncells == 0:
                 continue
-            self.board.setflags(write=False)
+            self.board_new.setflags(write=False)
             new_cells = None
             args = {
                 "iteration": int(it),
-                "board": self.board,
+                "board": self.board_new,
+                "patch": self.board_new[
+                    player.patch_bounds["ymin"] : player.patch_bounds["ymax"],
+                    player.patch_bounds["xmin"] : player.patch_bounds["xmax"],
+                ],
                 "tokens": int(player.tokens),
             }
             if self.safe:
                 try:
-                    new_cells = self.bots[name].iterate(**args)
+                    new_cells = bot.iterate(**args)
                 except:  # noqa
                     pass
             else:
-                new_cells = self.bots[name].iterate(**args)
-            self.board.setflags(write=True)
+                new_cells = bot.iterate(**args)
+            self.board_new.setflags(write=True)
             if new_cells:
                 self.add_player_new_cells(player, new_cells)
 
@@ -194,7 +205,7 @@ class Engine:
         if it % self.token_interval == 0:
             for player in [p for p in self.players.values() if p.ncells > 0]:
                 player.tokens += 1
-        # self.call_player_bots(it)
+        self.call_player_bots(it)
         evolve_board(
             self.board_old,
             self.board_new,
@@ -203,8 +214,6 @@ class Engine:
             self.neighbors,
             self.neighbor_buffer,
             self.cell_counts,
-            # self.jstart,
-            # self.jend,
             config.nx,
             config.ny,
         )

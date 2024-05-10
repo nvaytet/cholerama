@@ -33,15 +33,22 @@ class Player:
             )
 
         patch_size = (config.nx // config.npatches[1], config.ny // config.npatches[0])
-        if (
-            (self.pattern.x.min() < 0)
-            or (self.pattern.x.max() >= patch_size[1])
-            or (self.pattern.y.min() < 0)
-            or (self.pattern.y.max() >= patch_size[0])
-        ):
-            raise ValueError(
-                f"Pattern indices must be positive and contained in size {patch_size}. "
-            )
+        self.patch_bounds = {
+            "xmin": patch[1] * patch_size[1],
+            "xmax": (patch[1] + 1) * patch_size[1],
+            "ymin": patch[0] * patch_size[0],
+            "ymax": (patch[0] + 1) * patch_size[0],
+        }
+
+        # if (
+        #     (self.pattern.x.min() < 0)
+        #     or (self.pattern.x.max() >= patch_size[1])
+        #     or (self.pattern.y.min() < 0)
+        #     or (self.pattern.y.max() >= patch_size[0])
+        # ):
+        #     raise ValueError(
+        #         f"Pattern indices must be positive and contained in size {patch_size}. "
+        #     )
 
         # if any(np.array(self.pattern.shape) > np.array(config.pattern_size)):
         #     raise ValueError(

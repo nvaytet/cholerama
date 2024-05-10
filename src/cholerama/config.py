@@ -13,5 +13,13 @@ class Config:
     initial_tokens: int = 100
     additional_tokens: int = 200
 
+    @property
+    def stepx(self):
+        return self.nx // self.npatches[1]
+
+    @property
+    def stepy(self):
+        return self.ny // self.npatches[0]
+
 
 config = Config()
