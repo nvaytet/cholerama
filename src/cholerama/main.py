@@ -12,25 +12,9 @@ from . import config
 from .engine import Engine
 from .graphics import Graphics
 
-# from .map import MapData
 from .player import Player
 from .plot import plot
-from .scores import read_round, finalize_scores
 from .tools import array_from_shared_mem, make_starting_positions, make_color
-
-
-# class Clock:
-#     def __init__(self):
-#         self._start_time = None
-
-#     @property
-#     def start_time(self):
-#         if self._start_time is None:
-#             self._start_time = time.time()
-#         return self._start_time
-
-
-# clock = Clock()
 
 
 def spawn_graphics(*args):
@@ -47,40 +31,14 @@ def play(
     bots, iterations, seed=None, fps=None, safe=False, test=True, show_results=False
 ):
 
-    # self.iterations = iterations
-    # self._test = test
-    # self.safe = safe
-    # show_results = show_results
-    # self.token_interval = max(1, iterations // config.additional_tokens)
-    # n_sub_processes = max(ncores - 1, 1)
-    # rounds_played = 0 if test else read_round()
+    rng = np.random.default_rng(seed)
 
     board_old = np.zeros((config.ny, config.nx), dtype=int)
     board_new = board_old.copy()
     player_histories = np.zeros((len(bots), iterations + 1), dtype=int)
+    player_tokens = np.zeros(len(bots), dtype=int)
 
-    # Divide the board into as many patches as there are players, and try to make the
-    # patches as square as possible
-
-    # # decompose number of players into prime numbers
-    # nplayers = len(bots)
-    # factors = []
-    # for i in range(2, nplayers + 1):
-    #     while nplayers % i == 0:
-    #         factors.append(i)
-    #         nplayers //= i
-    # # now group the factors into 2 groups because the board is 2D. Try to make the
-    # # groups as close to each other in size as possible, when multiplied together
-    # group1 = []
-    # group2 = []
-    # for f in factors:
-    #     if np.prod(group1) < np.prod(group2):
-    #         group1.append(f)
-    #     else:
-    #         group2.append(f)
-
-    starting_patches = make_starting_positions(len(bots))
-    # starting_positions = np.full((len(bots), 2), 500, dtype=int)
+    starting_patches = make_starting_positions(len(bots), rng)
     patch_size = (config.ny // config.npatches[0], config.nx // config.npatches[1])
 
     if isinstance(bots, dict):
@@ -98,11 +56,7 @@ def play(
             for i, (bot, patch) in enumerate(zip(bots, starting_patches))
         }
 
-    # starting_positions = make_starting_positions(len(self.bots))
     players = {}
-    # self.player_histories = np.zeros((len(self.bots), self.iterations + 1), dtype=int)
-    # stepx = config.nx // config.npatches[1]
-    # stepy = config.ny // config.npatches[0]
     for i, (bot, patch) in enumerate(zip(dict_of_bots.values(), starting_patches)):
         player = Player(
             name=bot.name,
@@ -113,34 +67,19 @@ def play(
         )
         p = player.pattern
         x, y = p.x, p.y
-        # print(x, y)
         x = ((np.asarray(x) % config.stepx) + (patch[1] * config.stepx)) % config.nx
         y = ((np.asarray(y) % config.stepy) + (patch[0] * config.stepy)) % config.ny
-        # print(x, y)
         board_old[y, x] = player.number
-
-        # board_old[pos[1] : pos[1] + p.shape[0], pos[0] : pos[0] + p.shape[1]] = p * (
-        #     i + 1
-        # )
         players[bot.name] = player
         player_histories[i, 0] = player.ncells
+        player_tokens[i] = player.tokens
 
-    # # starting_positions = make_starting_positions(len(self.bots))
-
-    # groups = np.array_split(list(bots.keys()), n_sub_processes)
-
-    # # Split the board along the x dimension into n_sub_processes
-    # board_ind_start = np.linspace(0, config.ny, n_sub_processes + 1, dtype=int)
-    game_flow = np.zeros(2, dtype=bool)  # pause, exit_from_graphics
-
-    # print("groups:", groups)
-    # print("board_ind_start:", board_ind_start)
-
+    game_flow = np.zeros(2, dtype=bool)  # pause, exit
     buffer_mapping = {
         "board_old": board_old,
         "board_new": board_new,
         "player_histories": player_histories,
-        # "cell_counts": cell_counts,
+        "player_tokens": player_tokens,
         "game_flow": game_flow,
     }
 
@@ -171,40 +110,23 @@ def play(
             ),
         )
 
-        # engines = []
-        # # bot_index_begin = 0
-        # for i, group in enumerate(groups):
-        #     engines.append(
         engine = Process(
             target=spawn_engine,
             args=(
-                # i,
-                # board_ind_start[i],
-                # board_ind_start[i + 1],
                 dict_of_bots,
                 players,
                 iterations,
                 safe,
                 test,
-                seed,
-                # show_results,
                 buffers,
             ),
         )
 
-        # bot_index_begin += len(group)
-
         graphics.start()
-        # for engine in engines:
         engine.start()
         graphics.join()
-        # for engine in engines:
         engine.join()
 
-        # shutdown
-        for i, player in enumerate(players.values()):
-            player.peak = shared_arrays["player_histories"][i].max()
-        finalize_scores(players, test=test)
         fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
         results["board"][...] = shared_arrays["board_old"][...]
         for i, name in enumerate(players):

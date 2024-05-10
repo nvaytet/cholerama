@@ -18,33 +18,13 @@ from .tools import make_color, array_from_shared_mem
 class Engine:
     def __init__(
         self,
-        # bots: Union[dict, list],
-        # iterations: int = 100,
-        # safe: bool = False,
-        # test: bool = True,
-        # seed: Optional[int] = None,
-        # show_results: bool = False,
-        # pid: int,
-        # jstart: int,
-        # jend: int,
         bots: dict,
         players: dict,
         iterations: int,
         safe: bool,
         test: bool,
-        seed: Optional[int],
-        # show_results: bool,
         buffers,
-        # ncores: Optional[int] = None,
     ):
-        # if ncores is not None:
-        #     set_num_threads(ncores)
-        if seed is not None:
-            np.random.seed(seed)
-
-        # self.pid = pid
-        # self.jstart = jstart
-        # self.jend = jend
         self.niter = 0
         self.bots = bots
         self.players = players
@@ -55,56 +35,14 @@ class Engine:
         self.board_old = self.buffers["board_old"]
         self.board_new = self.buffers["board_new"]
         self.player_histories = self.buffers["player_histories"]
+        self.player_tokens = self.buffers["player_tokens"]
         self.game_flow = self.buffers["game_flow"]
         self.cell_counts = np.zeros(len(self.bots), dtype=int)
 
         self.iterations = iterations
         self._test = test
         self.safe = safe
-        # self._show_results = show_results
         self.token_interval = max(1, iterations // config.additional_tokens)
-        self.rounds_played = 0 if self._test else read_round()
-
-        # self.board = np.zeros((config.ny, config.nx), dtype=int)
-        # self.new_board = self.board.copy()
-
-        # starting_patches = make_starting_positions(len(bots))
-
-        # if isinstance(bots, dict):
-        #     self.bots = {
-        #         name: bot.Bot(number=i + 1, name=name, x=pos[0], y=pos[1])
-        #         for i, ((name, bot), pos) in enumerate(
-        #             zip(bots.items(), starting_positions)
-        #         )
-        #     }
-        # else:
-        #     self.bots = {
-        #         bot.AUTHOR: bot.Bot(number=i + 1, name=bot.AUTHOR, x=pos[0], y=pos[1])
-        #         for i, (bot, pos) in enumerate(zip(bots, starting_positions))
-        #     }
-
-        # # starting_positions = make_starting_positions(len(self.bots))
-        # self.players = {}
-        # self.player_histories = np.zeros(
-        #     (len(self.bots), self.iterations + 1), dtype=int
-        # )
-        # for i, (bot, pos) in enumerate(zip(self.bots.values(), starting_positions)):
-        #     player = Player(
-        #         name=bot.name,
-        #         number=i + 1,
-        #         pattern=bot.pattern,
-        #         color=make_color(i if bot.color is None else bot.color),
-        #     )
-        #     p = player.pattern
-        #     self.board[pos[1] : pos[1] + p.shape[0], pos[0] : pos[0] + p.shape[1]] = (
-        #         p * (i + 1)
-        #     )
-        #     self.players[bot.name] = player
-        #     self.player_histories[i, 0] = player.ncells
-
-        # self.bot_call_order = np.roll(
-        #     list(self.players.keys()), self.rounds_played % len(self.players)
-        # )
 
         self.xoff = np.array([-1, 0, 1, -1, 1, -1, 0, 1])
         self.yoff = np.array([-1, -1, -1, 0, 0, 1, 1, 1])
@@ -120,8 +58,6 @@ class Engine:
             self.neighbors,
             self.neighbor_buffer,
             self.cell_counts,
-            # self.jstart,
-            # self.jend,
             config.nx,
             config.ny,
         )
@@ -139,8 +75,6 @@ class Engine:
                 f"has {player.tokens}."
             )
             ok = False
-        # x = np.asarray(x) % config.nx
-        # y = np.asarray(y) % config.ny
         x = (
             (np.asarray(x) % config.stepx) + (player.patch[1] * config.stepx)
         ) % config.nx
@@ -155,8 +89,6 @@ class Engine:
             player.tokens -= ntok
 
     def call_player_bots(self, it: int):
-        # for name in self.bot_call_order:
-        #     player = self.players[name]
         for bot, player in zip(self.bots.values(), self.players.values()):
             if player.ncells == 0:
                 continue
@@ -182,25 +114,6 @@ class Engine:
             if new_cells:
                 self.add_player_new_cells(player, new_cells)
 
-    # def shutdown(self):
-    #     for i, player in enumerate(self.players.values()):
-    #         player.peak = self.player_histories[i].max()
-    #     finalize_scores(self.players, test=self._test)
-    #     fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
-    #     results = {"board": self.board_old}
-    #     results.update(
-    #         {
-    #             f"{name}_history": self.player_histories[i]
-    #             for i, name in enumerate(self.players)
-    #         }
-    #     )
-    #     results.update(
-    #         {f"{name}_color": player.color for name, player in self.players.items()}
-    #     )
-    #     np.savez(fname, **results)
-    #     plot(fname=fname.replace(".npz", ".pdf"), show=self._show_results, **results)
-    #     return results
-
     def update(self, it: int):
         if it % self.token_interval == 0:
             for player in [p for p in self.players.values() if p.ncells > 0]:
@@ -217,30 +130,20 @@ class Engine:
             config.nx,
             config.ny,
         )
-        # self.game_flow[self.pid] = True
-        # while False in self.game_flow:
-        #     pass
-        # self.game_flow[self.pid] = False
-        # self.board_old[self.jstart : self.jend] = self.board_new[
-        #     self.jstart : self.jend
-        # ]
-        # self.game_flow[self.pid] = True
-        # while False in self.game_flow:
-        #     pass
-        # self.game_flow[self.pid] = False
         self.board_old[...] = self.board_new[...]
-
-        # self.board, self.new_board = self.new_board, self.board
-        # for i, player in enumerate(self.players.values()):
-        # player.update(ncells=self.cell_counts[i])
+        for i, player in enumerate(self.players.values()):
+            player.update(ncells=self.cell_counts[i])
         self.player_histories[:, it] = self.cell_counts
+        self.player_tokens[...] = np.array([p.tokens for p in self.players.values()])
 
     def run(self):
         while self.niter < self.iterations and not self.game_flow[1]:
             if self.game_flow[0]:
                 self.niter += 1
                 self.update(self.niter)
-        # for it in range(1, self.iterations + 1):
-        #     self.update(it)
         print(f"Reached {self.niter} iterations.")
-        # return self.shutdown()
+        histories = {
+            name: self.player_histories[i] for i, name in enumerate(self.players)
+        }
+        finalize_scores(histories, test=self._test)
+        self.game_flow[1] = True

@@ -100,6 +100,11 @@ class Graphics:
         self.image.setImage(self.cmap(self.board.T))
         for i, hist in enumerate(self.player_histories):
             self.lines[i].setData(hist[:], self.xhistory)
+        self.update_tokenboard()
+        if self.buffers["game_flow"][1]:
+            # self.shutdown()
+            self.update_leaderboard(*read_scores(self.players.keys(), test=self._test))
+            self.timer.stop()
 
     # class GraphicalEngine(Engine):
     #     def __init__(self, *args, fps: int = 15, **kwargs):
@@ -132,10 +137,10 @@ class Graphics:
             )
 
     def update_tokenboard(self):
-        for name, p in self.players.items():
+        for i, (name, p) in enumerate(self.players.items()):
             self.token_boxes[name].setText(
                 f'<div style="color:{p.color}">&#9632;</div> '
-                f"{name[:config.max_name_length]}: {p.tokens}"
+                f"{name[:config.max_name_length]}: {self.buffers['player_tokens'][i]}"
             )
 
     def run(self):

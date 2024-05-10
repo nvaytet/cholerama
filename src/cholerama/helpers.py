@@ -9,7 +9,7 @@ from PIL import Image
 
 
 def find_empty_regions(
-    board: np.ndarray, size: Union[int, Tuple[int, int]], skip: int = 2
+    board: np.ndarray, size: Union[int, Tuple[int, int]], skip: int = 4
 ) -> np.ndarray:
     """
     Find all empty regions of a given size in the board.

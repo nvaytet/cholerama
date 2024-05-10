@@ -30,28 +30,10 @@ def make_color(c: Union[int, str]) -> str:
     return mcolors.to_hex(c)
 
 
-def make_starting_positions(n) -> list:
-    # possible starting row and column as tuples
-    # stepx = config.nx // config.npatches[1]
-    # stepy = config.ny // config.npatches[0]
+def make_starting_positions(n, rng) -> list:
+    # Possible starting row and column as tuples
     inds = [
         (j, i) for j in range(config.npatches[0]) for i in range(config.npatches[1])
     ]
-    print(np.shape(inds))
-
-    choices = np.random.choice(range(len(inds)), size=n, replace=False)
+    choices = rng.choice(range(len(inds)), size=n, replace=False)
     return [inds[i] for i in choices]
-
-    # dmin = 0
-    # while dmin < (0.15 * (config.nx + config.ny) / 2):
-    #     x = np.random.randint(0, config.nx - config.pattern_size[1], size=n)
-    #     y = np.random.randint(0, config.ny - config.pattern_size[0], size=n)
-    #     if n == 1:
-    #         break
-    #     x1 = np.broadcast_to(x, (n, n))
-    #     x2 = x1.T
-    #     y1 = np.broadcast_to(y, (n, n))
-    #     y2 = y1.T
-    #     dist = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
-    #     dmin = dist[dist > 0].min()
-    # return list(zip(x, y))

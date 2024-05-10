@@ -3,6 +3,8 @@
 import os
 from typing import Dict
 
+import numpy as np
+
 from .player import Player
 
 
@@ -17,8 +19,8 @@ def read_round() -> int:
 
 
 def read_scores(players: Dict[str, Player], test: bool) -> Dict[str, int]:
-    scores = {p: 0 for p in players}
-    peaks = {p: 0 for p in players}
+    scores = {name: 0 for name in players}
+    peaks = {name: 0 for name in players}
     fname = "scores.txt"
     if os.path.exists(fname) and (not test):
         with open(fname, "r") as f:
@@ -56,11 +58,11 @@ def _print_scores(
         )
 
 
-def finalize_scores(players: Dict[str, Player], test: bool = False):
-    scores, peaks = read_scores(players, test=test)
-    round_scores = {k: p.ncells for k, p in players.items()}
-    final_scores = {k: scores[k] + p.ncells for k, p in players.items()}
-    final_peaks = {k: max(peaks[k], p.peak) for k, p in players.items()}
+def finalize_scores(player_histories: Dict[str, np.ndarray], test: bool = False):
+    scores, peaks = read_scores(player_histories, test=test)
+    round_scores = {k: p[-1] for k, p in player_histories.items()}
+    final_scores = {k: scores[k] + round_scores[k] for k in player_histories}
+    final_peaks = {k: max(peaks[k], p.max()) for k, p in player_histories.items()}
     _print_scores(
         round_scores=round_scores, final_scores=final_scores, final_peaks=final_peaks
     )
