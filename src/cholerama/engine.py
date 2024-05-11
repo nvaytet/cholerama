@@ -12,7 +12,64 @@ from .helpers import Positions
 from .player import Player
 from .plot import plot
 from .scores import finalize_scores, read_round
-from .tools import make_color, array_from_shared_mem
+from .tools import make_color, array_from_shared_mem, make_starting_positions
+
+
+def setup(bots, iterations, seed=None):
+
+    rng = np.random.default_rng(seed)
+    nplayers = len(bots)
+
+    board_old = np.zeros((config.ny, config.nx), dtype=int)
+    board_new = board_old.copy()
+    player_histories = np.zeros((nplayers, iterations + 1), dtype=int)
+    player_tokens = np.zeros(nplayers, dtype=int)
+    game_flow = np.zeros(2, dtype=bool)  # pause, exit
+
+    starting_patches = make_starting_positions(nplayers, rng)
+    patch_size = (config.ny // config.npatches[0], config.nx // config.npatches[1])
+
+    if isinstance(bots, dict):
+        dict_of_bots = {
+            name: bot.Bot(
+                number=i + 1, name=name, patch_location=patch, patch_size=patch_size
+            )
+            for i, ((name, bot), patch) in enumerate(
+                zip(bots.items(), starting_patches)
+            )
+        }
+    else:
+        dict_of_bots = {
+            bot.AUTHOR: bot.Bot(number=i + 1, name=bot.AUTHOR, patch=patch)
+            for i, (bot, patch) in enumerate(zip(bots, starting_patches))
+        }
+
+    players = {}
+    for i, (bot, patch) in enumerate(zip(dict_of_bots.values(), starting_patches)):
+        player = Player(
+            name=bot.name,
+            number=i + 1,
+            pattern=bot.pattern,
+            color=make_color(i if bot.color is None else bot.color),
+            patch=patch,
+        )
+        p = player.pattern
+        x, y = p.x, p.y
+        x = ((np.asarray(x) % config.stepx) + (patch[1] * config.stepx)) % config.nx
+        y = ((np.asarray(y) % config.stepy) + (patch[0] * config.stepy)) % config.ny
+        board_old[y, x] = player.number
+        players[bot.name] = player
+        player_histories[i, 0] = player.ncells
+        player_tokens[i] = player.tokens
+
+    buffers = {
+        "board_old": board_old,
+        "board_new": board_new,
+        "player_histories": player_histories,
+        "player_tokens": player_tokens,
+        "game_flow": game_flow,
+    }
+    return buffers, players, dict_of_bots
 
 
 class Engine:
@@ -25,18 +82,17 @@ class Engine:
         test: bool,
         buffers,
     ):
-        self.niter = 0
         self.bots = bots
         self.players = players
-        self.buffers = {
-            key: array_from_shared_mem(*value) for key, value in buffers.items()
-        }
+        # self.buffers = {
+        #     key: array_from_shared_mem(*value) for key, value in buffers.items()
+        # }
 
-        self.board_old = self.buffers["board_old"]
-        self.board_new = self.buffers["board_new"]
-        self.player_histories = self.buffers["player_histories"]
-        self.player_tokens = self.buffers["player_tokens"]
-        self.game_flow = self.buffers["game_flow"]
+        self.board_old = buffers["board_old"]
+        self.board_new = buffers["board_new"]
+        self.player_histories = buffers["player_histories"]
+        self.player_tokens = buffers["player_tokens"]
+        self.game_flow = buffers["game_flow"]
         self.cell_counts = np.zeros(len(self.bots), dtype=int)
 
         self.iterations = iterations
@@ -136,14 +192,55 @@ class Engine:
         self.player_histories[:, it] = self.cell_counts
         self.player_tokens[...] = np.array([p.tokens for p in self.players.values()])
 
+    def shutdown(self):
+        histories = {
+            name: self.player_histories[i] for i, name in enumerate(self.players)
+        }
+        finalize_scores(histories, test=self._test)
+
+    def run(self):
+        for it in range(self.iterations):
+            self.update(it)
+        print(f"Reached {it} iterations.")
+        self.shutdown()
+        # histories = {
+        #     name: self.player_histories[i] for i, name in enumerate(self.players)
+        # }
+        # finalize_scores(histories, test=self._test)
+
+
+class GraphicalEngine(Engine):
+
+    def __init__(
+        self,
+        bots: dict,
+        players: dict,
+        iterations: int,
+        safe: bool,
+        test: bool,
+        buffers,
+    ):
+        self.niter = 0
+        super().__init__(
+            bots=bots,
+            players=players,
+            iterations=iterations,
+            safe=safe,
+            test=test,
+            buffers={
+                key: array_from_shared_mem(*value) for key, value in buffers.items()
+            },
+        )
+
     def run(self):
         while self.niter < self.iterations and not self.game_flow[1]:
             if self.game_flow[0]:
                 self.niter += 1
                 self.update(self.niter)
         print(f"Reached {self.niter} iterations.")
-        histories = {
-            name: self.player_histories[i] for i, name in enumerate(self.players)
-        }
-        finalize_scores(histories, test=self._test)
+        self.shutdown()
+        # histories = {
+        #     name: self.player_histories[i] for i, name in enumerate(self.players)
+        # }
+        # finalize_scores(histories, test=self._test)
         self.game_flow[1] = True

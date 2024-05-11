@@ -22,5 +22,4 @@ cholerama.headless(
     bots=bots,  # List of bots to use
     iterations=400,  # Number of iterations to run
     show_results=False,  # Display plot of results at the end
-    nthreads=8,
 )
