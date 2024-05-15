@@ -14,7 +14,6 @@ except ImportError:
     from PySide2 import QtWidgets as qw
 
 from . import config
-from .engine import Engine
 from .player import Player
 from .scores import read_scores
 from .tools import array_from_shared_mem
@@ -30,7 +29,6 @@ def _make_separator():
 class Graphics:
     def __init__(
         self,
-        # board: np.ndarray,
         players: Dict[str, Player],
         fps: int,
         test: bool,
@@ -52,7 +50,6 @@ class Graphics:
         self.left_view = self.window.addViewBox(None, col=0)
         self.left_view.setAspectLocked(True)
 
-        nplayers = len(self.player_histories)
         self.cmap = mcolors.ListedColormap(
             ["black"] + [p.color for p in self.players.values()]
         )
@@ -60,8 +57,6 @@ class Graphics:
         self.left_view.addItem(self.image)
 
         self.outlines = []
-        # stepx = config.nx // config.npatches[1]
-        # stepy = config.ny // config.npatches[0]
         lw = 5
         for i, p in enumerate(self.players.values()):
             x1 = p.patch[1] * config.stepx + lw / 2
@@ -70,8 +65,6 @@ class Graphics:
             y2 = (p.patch[0] + 1) * config.stepy - lw / 2
             outl_x = np.array([x1, x2, x2, x1, x1])
             outl_y = np.array([y1, y1, y2, y2, y1])
-            # c = mcolors.to_rgba(p.color)
-            # c[-1]
             self.outlines.append(
                 pg.PlotCurveItem(
                     outl_x,
@@ -79,7 +72,6 @@ class Graphics:
                     pen=pg.mkPen(mcolors.to_hex(p.color), width=lw),
                 )
             )
-            # self.outlines[-1].setAlpha(0.5)
             self.left_view.addItem(self.outlines[-1])
 
         self.right_view = self.window.addPlot(row=None, col=1)
@@ -102,21 +94,8 @@ class Graphics:
             self.lines[i].setData(hist[:], self.xhistory)
         self.update_tokenboard()
         if self.buffers["game_flow"][1]:
-            # self.shutdown()
             self.update_leaderboard(*read_scores(self.players.keys(), test=self._test))
             self.timer.stop()
-
-    # class GraphicalEngine(Engine):
-    #     def __init__(self, *args, fps: int = 15, **kwargs):
-    #         super().__init__(*args, **kwargs)
-
-    #         self.graphics = Graphics(
-    #             self.board,
-    #             players=self.players.values(),
-    #             player_histories=self.player_histories,
-    #         )
-    #         self.niter = 0
-    #         self.fps = fps
 
     def update_leaderboard(self, scores: Dict[str, int], peaks: Dict[str, int]):
         sorted_scores = dict(
@@ -202,30 +181,16 @@ class Graphics:
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update)
         self.timer.setInterval(1000 // self.fps if self.fps is not None else 0)
-        # self.timer.setInterval(0)
         self.timer.start()
         pg.exec()
         self.buffers["game_flow"][1] = True
 
     def toggle_pause(self):
         if self.play_button.isChecked():
-            # self.timer.start()
             for outline in self.outlines:
                 outline.setVisible(False)
             self.buffers["game_flow"][0] = True
             self.play_button.setText("Pause")
         else:
-            # self.timer.stop()
             self.buffers["game_flow"][0] = False
             self.play_button.setText("Play")
-
-    # def update(self):
-    #     self.niter += 1
-    #     if self.niter > self.iterations:
-    #         self.shutdown()
-    #         self.update_leaderboard(*read_scores(self.players.keys(), test=self._test))
-    #         self.timer.stop()
-    #         return
-    #     super().update(self.niter)
-    #     self.graphics.update(self.board, histories=self.player_histories)
-    #     # self.update_tokenboard()

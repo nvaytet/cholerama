@@ -8,13 +8,11 @@ from multiprocessing.managers import SharedMemoryManager
 import numpy as np
 
 
-from . import config
 from .engine import GraphicalEngine, setup
 from .graphics import Graphics
 
-from .player import Player
 from .plot import plot
-from .tools import array_from_shared_mem, make_starting_positions, make_color
+from .tools import array_from_shared_mem
 
 
 def spawn_graphics(*args):

@@ -1,18 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
-
 from .config import config
 from .engine import Engine, setup
 
-# from .graphics import GraphicalEngine
 from .helpers import Positions
 from .main import play
 from .plot import load, plot
-
-
-# def play(**kwargs):
-#     eng = GraphicalEngine(**kwargs)
-#     return eng.run()
 
 
 def headless(*, bots, iterations, seed=None, show_results=False, **kwargs):

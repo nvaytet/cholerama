@@ -39,35 +39,9 @@ class Player:
             "ymin": patch[0] * patch_size[0],
             "ymax": (patch[0] + 1) * patch_size[0],
         }
-
-        # if (
-        #     (self.pattern.x.min() < 0)
-        #     or (self.pattern.x.max() >= patch_size[1])
-        #     or (self.pattern.y.min() < 0)
-        #     or (self.pattern.y.max() >= patch_size[0])
-        # ):
-        #     raise ValueError(
-        #         f"Pattern indices must be positive and contained in size {patch_size}. "
-        #     )
-
-        # if any(np.array(self.pattern.shape) > np.array(config.pattern_size)):
-        #     raise ValueError(
-        #         f"Pattern must be contained in size {config.pattern_size}. "
-        #         f"Got {self.pattern.shape}."
-        #     )
-
         self.ncells = len(self.pattern)
-        # if psum > config.initial_tokens:
-        #     raise ValueError(
-        #         f"Player {self.name}: pattern has more than "
-        #         f"{config.initial_tokens} tokens."
-        #     )
-
         self.tokens = config.initial_tokens - self.ncells
-        # self.ncells = np.sum(self.pattern > 0)
         self.history = []
 
-    # def update(self, board: np.ndarray):
-    #     self.ncells = np.sum(board == self.number)
     def update(self, ncells: int):
         self.ncells = ncells

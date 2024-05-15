@@ -1,17 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import time
-from typing import Optional, Tuple, Union
 
 import numpy as np
-from numba import set_num_threads
 
 from . import config
 from .compute import evolve_board
 from .helpers import Positions
 from .player import Player
 from .plot import plot
-from .scores import finalize_scores, read_round
+from .scores import finalize_scores
 from .tools import make_color, array_from_shared_mem, make_starting_positions
 
 
@@ -84,10 +82,6 @@ class Engine:
     ):
         self.bots = bots
         self.players = players
-        # self.buffers = {
-        #     key: array_from_shared_mem(*value) for key, value in buffers.items()
-        # }
-
         self.board_old = buffers["board_old"]
         self.board_new = buffers["board_new"]
         self.player_histories = buffers["player_histories"]
@@ -211,7 +205,6 @@ class Engine:
 
     def run(self, show_results: bool = False):
         for it in range(1, self.iterations + 1):
-            # print(it)
             self.update(it)
         print(f"Reached {it} iterations.")
         self.write_scores()

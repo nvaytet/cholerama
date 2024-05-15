@@ -13,16 +13,11 @@ def evolve_board(
     neighbors: np.ndarray,
     buffer: np.ndarray,
     cell_counts: np.ndarray,
-    # jstart: int,
-    # jend: int,
     nx: int,
     ny: int,
 ):
     for j in prange(ny):
         for i in range(nx):
-            # # See https://stackoverflow.com/a/72465167
-            # assert i >= 0
-            # assert j >= 0
             # Get the values of the neighbors
             neighbor_count = 0
             for k in range(8):
