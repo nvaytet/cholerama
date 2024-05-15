@@ -67,9 +67,9 @@ def play(
                 dict_of_bots,
                 players,
                 iterations,
+                shared_buffers,
                 safe,
                 test,
-                shared_buffers,
             ),
         )
 

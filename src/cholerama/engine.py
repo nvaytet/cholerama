@@ -78,9 +78,9 @@ class Engine:
         bots: dict,
         players: dict,
         iterations: int,
-        safe: bool,
-        test: bool,
-        buffers,
+        buffers: dict,
+        safe: bool = False,
+        test: bool = True,
     ):
         self.bots = bots
         self.players = players
@@ -192,21 +192,31 @@ class Engine:
         self.player_histories[:, it] = self.cell_counts
         self.player_tokens[...] = np.array([p.tokens for p in self.players.values()])
 
-    def shutdown(self):
+    def write_scores(self):
         histories = {
             name: self.player_histories[i] for i, name in enumerate(self.players)
         }
         finalize_scores(histories, test=self._test)
 
-    def run(self):
-        for it in range(self.iterations):
+    def write_results(self, show_results: bool = False):
+        results = {}
+        fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
+        results["board"] = self.board_old
+        for i, (name, player) in enumerate(self.players.items()):
+            results[f"{name}_history"] = self.player_histories[i]
+            results[f"{name}_color"] = player.color
+        np.savez(fname, **results)
+        plot(fname=fname.replace(".npz", ".pdf"), show=show_results, **results)
+        return results
+
+    def run(self, show_results: bool = False):
+        for it in range(1, self.iterations + 1):
+            # print(it)
             self.update(it)
         print(f"Reached {it} iterations.")
-        self.shutdown()
-        # histories = {
-        #     name: self.player_histories[i] for i, name in enumerate(self.players)
-        # }
-        # finalize_scores(histories, test=self._test)
+        self.write_scores()
+        results = self.write_results(show_results)
+        return results
 
 
 class GraphicalEngine(Engine):
@@ -216,9 +226,9 @@ class GraphicalEngine(Engine):
         bots: dict,
         players: dict,
         iterations: int,
-        safe: bool,
-        test: bool,
-        buffers,
+        buffers: dict,
+        safe: bool = False,
+        test: bool = True,
     ):
         self.niter = 0
         super().__init__(
@@ -238,9 +248,5 @@ class GraphicalEngine(Engine):
                 self.niter += 1
                 self.update(self.niter)
         print(f"Reached {self.niter} iterations.")
-        self.shutdown()
-        # histories = {
-        #     name: self.player_histories[i] for i, name in enumerate(self.players)
-        # }
-        # finalize_scores(histories, test=self._test)
+        self.write_scores()
         self.game_flow[1] = True

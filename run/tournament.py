@@ -13,4 +13,5 @@ cholerama.play(
     fps=30,  # Frames per second
     show_results=False,  # Save a figure of the results
     test=False,  # Not a test
+    safe=True,  # Safe mode to catch errors
 )
