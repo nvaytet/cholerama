@@ -94,12 +94,19 @@ class Graphics:
             self.lines[i].setData(hist[:], self.xhistory)
         self.update_tokenboard()
         if self.buffers["game_flow"][1]:
-            self.update_leaderboard(*read_scores(self.players.keys(), test=self._test))
+            self.update_leaderboard(read_scores(self.players.keys(), test=self._test))
             self.timer.stop()
 
-    def update_leaderboard(self, scores: Dict[str, int], peaks: Dict[str, int]):
+    def update_leaderboard(self, scores: dict):
+        names = list(scores["0"].keys())
+        sum_scores = {
+            name: sum([v[name]["score"] for v in scores.values()]) for name in names
+        }
+        max_peaks = {
+            name: max([v[name]["peak"] for v in scores.values()]) for name in names
+        }
         sorted_scores = dict(
-            sorted(scores.items(), key=lambda item: item[1], reverse=True)
+            sorted(sum_scores.items(), key=lambda item: item[1], reverse=True)
         )
         for i, (name, score) in enumerate(sorted_scores.items()):
             self.score_boxes[i].setText(
@@ -107,12 +114,12 @@ class Graphics:
                 f"{i+1}. {name[:config.max_name_length]}: {score}"
             )
         sorted_peaks = dict(
-            sorted(peaks.items(), key=lambda item: item[1], reverse=True)
+            sorted(max_peaks.items(), key=lambda item: item[1], reverse=True)
         )
         for i, name in enumerate(list(sorted_peaks.keys())[:3]):
             self.peak_boxes[i].setText(
                 f'<div style="color:{self.players[name].color}">&#9632;</div> '
-                f"{i+1}. {name[:config.max_name_length]}: {peaks[name]}"
+                f"{i+1}. {name[:config.max_name_length]}: {sorted_peaks[name]}"
             )
 
     def update_tokenboard(self):
@@ -174,7 +181,7 @@ class Graphics:
         self.play_button.clicked.connect(self.toggle_pause)
         widget2_layout.addWidget(self.play_button)
 
-        self.update_leaderboard(*read_scores(self.players.keys(), test=self._test))
+        self.update_leaderboard(read_scores(self.players.keys(), test=self._test))
         self.update_tokenboard()
 
         main_window.show()

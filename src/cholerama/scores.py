@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
+import json
 import os
 from typing import Dict
 
@@ -8,62 +9,49 @@ import numpy as np
 from .player import Player
 
 
-def read_round() -> int:
-    fname = "scores.txt"
-    rounds_played = 0
-    if os.path.exists(fname):
-        with open(fname, "r") as f:
-            line = f.readline()
-        rounds_played = int(line.strip())
-    return rounds_played
-
-
 def read_scores(players: Dict[str, Player], test: bool) -> Dict[str, int]:
-    scores = {name: 0 for name in players}
-    peaks = {name: 0 for name in players}
-    fname = "scores.txt"
+    scores = {"0": {name: {"score": 0, "peak": 0} for name in players}}
+    fname = "scores.json"
     if os.path.exists(fname) and (not test):
         with open(fname, "r") as f:
-            contents = f.readlines()
-        for line in contents[1:]:
-            name, score, peak = line.split(":")
-            scores[name] = int(score.strip())
-            peaks[name] = int(peak.strip())
-    return scores, peaks
+            scores = json.load(f)
+    return scores
 
 
-def _write_scores(scores: Dict[str, int], peaks: Dict[str, int]):
-    fname = "scores.txt"
-    r = read_round()
+def _write_scores(scores: dict):
+    fname = "scores.json"
     with open(fname, "w") as f:
-        f.write(f"{r + 1}\n")
-        for name, score in scores.items():
-            f.write(f"{name}: {score} : {peaks[name]}\n")
+        json.dump(scores, f)
 
 
-def _print_scores(
-    round_scores: Dict[str, int],
-    final_scores: Dict[str, int],
-    final_peaks: Dict[str, int],
-):
-    all_scores = [
-        (team, round_scores[team], final_scores[team]) for team in final_scores
-    ]
-    sorted_scores = sorted(all_scores, key=lambda tup: tup[2], reverse=True)
+def _print_scores(scores: dict):
+    names = list(scores["0"].keys())
+    sum_scores = {
+        name: sum([v[name]["score"] for v in scores.values()]) for name in names
+    }
+    max_peaks = {
+        name: max([v[name]["peak"] for v in scores.values()]) for name in names
+    }
+    scores_this_round = {
+        name: scores[str(len(scores) - 1)][name]["score"] for name in names
+    }
+    sorted_names = dict(
+        sorted(sum_scores.items(), key=lambda item: item[1], reverse=True)
+    )
     print("\nScores:")
-    for i, (name, score, total) in enumerate(sorted_scores):
+    for i, name in enumerate(sorted_names):
         print(
-            f"{i + 1}. {name}: {total} (this round: {score}) "
-            f"[peak: {final_peaks[name]}]"
+            f"{i + 1}. {name}: {sum_scores[name]} (this round: {scores_this_round[name]}) "
+            f"[peak: {max_peaks[name]}]"
         )
 
 
 def finalize_scores(player_histories: Dict[str, np.ndarray], test: bool = False):
-    scores, peaks = read_scores(player_histories, test=test)
-    round_scores = {k: p[-1] for k, p in player_histories.items()}
-    final_scores = {k: scores[k] + round_scores[k] for k in player_histories}
-    final_peaks = {k: max(peaks[k], p.max()) for k, p in player_histories.items()}
-    _print_scores(
-        round_scores=round_scores, final_scores=final_scores, final_peaks=final_peaks
-    )
-    _write_scores(final_scores, final_peaks)
+    scores = read_scores(player_histories, test=test)
+    round_scores = {k: int(p[-1]) for k, p in player_histories.items()}
+    round_peaks = {k: int(p.max()) for k, p in player_histories.items()}
+    scores[str(len(scores))] = {
+        k: {"score": round_scores[k], "peak": round_peaks[k]} for k in player_histories
+    }
+    _print_scores(scores)
+    _write_scores(scores)
