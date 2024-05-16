@@ -38,6 +38,8 @@ Conquer the largest surface on the board
 1. Any dead cell with exactly three live neighbors spontaneously comes to life
 1. **Multiplayer**: the cell that comes to life takes the value of most common neighbor
 
+<img src="https://lh3.googleusercontent.com/C6HkzTZOrAtlLPkY6tHcUQMX1BoahTG_Gt4ueO_G0dV-J6dqSbT7ElD6Ddg_vg2cNI1D9cIBQMUNaPWIkPrqGVpbE9RY_9Q3Fn0k" width="300" />
+
 ### Tokens:
 
 - You start the game with 100 tokens
