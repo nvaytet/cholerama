@@ -121,15 +121,15 @@ class Bot:
 
     def iterate(self, iteration: int, board: np.ndarray, patch: np.ndarray, tokens: int):
         if tokens >= 5:
-            # Pick a random empty patch of size 3x3
-            empty_patches = helpers.find_empty_patches(patch, (3, 3))
-            npatches = len(empty_patches)
-            if npatches == 0:
+            # Pick a random empty region of size 3x3 inside my patch
+            empty_regions = helpers.find_empty_regions(patch, (3, 3))
+            nregions = len(empty_regions)
+            if nregions == 0:
                 return None
             # Make a glider
-            ind = np.random.randint(0, npatches)
-            x = np.array([1, 2, 0, 1, 2]) + empty_patches[ind, 1]
-            y = np.array([2, 1, 0, 0, 0]) + empty_patches[ind, 0]
+            ind = self.rng.integers(0, nregions)
+            x = np.array([1, 2, 0, 1, 2]) + empty_regions[ind, 1]
+            y = np.array([2, 1, 0, 0, 0]) + empty_regions[ind, 0]
             return Positions(x=x, y=y)
 ```
 
