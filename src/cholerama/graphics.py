@@ -14,51 +14,9 @@ except ImportError:
     from PySide2 import QtWidgets as qw
 
 from . import config
-from .engine import Engine
 from .player import Player
 from .scores import read_scores
-
-
-class Graphics:
-    def __init__(
-        self,
-        board: np.ndarray,
-        players: Dict[str, Player],
-        player_histories: np.ndarray,
-    ):
-
-        self.app = pg.mkQApp("Cholerama")
-        self.window = pg.GraphicsLayoutWidget()
-        self.window.setWindowTitle("Cholerama")
-        self.window.setBackground("#1a1a1a")
-        self.left_view = self.window.addViewBox(None, col=0)
-        self.left_view.setAspectLocked(True)
-
-        nplayers = len(player_histories)
-        self.cmap = mcolors.ListedColormap(["black"] + [p.color for p in players])
-        self.image = pg.ImageItem(image=self.cmap(board.T))
-        self.left_view.addItem(self.image)
-
-        self.right_view = self.window.addPlot(row=None, col=1)
-        self.right_view.setMouseEnabled(x=False)
-        self.right_view.setLabel("bottom", text="Number of cells")
-        self.right_view.setLabel("left", text="Iterations")
-        self.lines = []
-        self.xhistory = np.arange(player_histories.shape[1])
-        for i, p in enumerate(players):
-            self.lines.append(
-                self.right_view.plot(
-                    player_histories[i], self.xhistory, pen=mcolors.to_hex(p.color)
-                )
-            )
-        self.window.ci.layout.setColumnMaximumWidth(1, 300)
-
-        return
-
-    def update(self, board: np.ndarray, histories: np.ndarray):
-        self.image.setImage(self.cmap(board.T))
-        for i, hist in enumerate(histories):
-            self.lines[i].setData(hist[:], self.xhistory)
+from .tools import array_from_shared_mem
 
 
 def _make_separator():
@@ -68,17 +26,76 @@ def _make_separator():
     return separator
 
 
-class GraphicalEngine(Engine):
-    def __init__(self, *args, fps: int = 15, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.graphics = Graphics(
-            self.board,
-            players=self.players.values(),
-            player_histories=self.player_histories,
-        )
-        self.niter = 0
+class Graphics:
+    def __init__(
+        self,
+        players: Dict[str, Player],
+        fps: int,
+        test: bool,
+        buffers,
+    ):
+        self.players = players
+        self.buffers = {
+            key: array_from_shared_mem(*value) for key, value in buffers.items()
+        }
         self.fps = fps
+        self._test = test
+        self.player_histories = self.buffers["player_histories"]
+        self.board = self.buffers["board_old"]
+
+        self.app = pg.mkQApp("Cholerama")
+        self.window = pg.GraphicsLayoutWidget()
+        self.window.setWindowTitle("Cholerama")
+        self.window.setBackground("#1a1a1a")
+        self.left_view = self.window.addViewBox(None, col=0)
+        self.left_view.setAspectLocked(True)
+
+        self.cmap = mcolors.ListedColormap(
+            ["black"] + [p.color for p in self.players.values()]
+        )
+        self.image = pg.ImageItem(image=self.cmap(self.board.T))
+        self.left_view.addItem(self.image)
+
+        self.outlines = []
+        lw = 5
+        for i, p in enumerate(self.players.values()):
+            x1 = p.patch[1] * config.stepx + lw / 2
+            x2 = (p.patch[1] + 1) * config.stepx - lw / 2
+            y1 = p.patch[0] * config.stepy + lw / 2
+            y2 = (p.patch[0] + 1) * config.stepy - lw / 2
+            outl_x = np.array([x1, x2, x2, x1, x1])
+            outl_y = np.array([y1, y1, y2, y2, y1])
+            self.outlines.append(
+                pg.PlotCurveItem(
+                    outl_x,
+                    outl_y,
+                    pen=pg.mkPen(mcolors.to_hex(p.color), width=lw),
+                )
+            )
+            self.left_view.addItem(self.outlines[-1])
+
+        self.right_view = self.window.addPlot(row=None, col=1)
+        self.right_view.setMouseEnabled(x=False)
+        self.right_view.setLabel("bottom", text="Number of cells")
+        self.right_view.setLabel("left", text="Iterations")
+        self.lines = []
+        self.xhistory = np.arange(self.player_histories.shape[1])
+        for i, p in enumerate(self.players.values()):
+            self.lines.append(
+                self.right_view.plot(
+                    self.player_histories[i], self.xhistory, pen=mcolors.to_hex(p.color)
+                )
+            )
+        self.window.ci.layout.setColumnMaximumWidth(1, 300)
+
+    def update(self):
+        self.image.setImage(self.cmap(self.board.T))
+        for i, hist in enumerate(self.player_histories):
+            self.lines[i].setData(hist[:], self.xhistory)
+        self.update_tokenboard()
+        if self.buffers["game_flow"][1]:
+            self.update_leaderboard(*read_scores(self.players.keys(), test=self._test))
+            self.timer.stop()
 
     def update_leaderboard(self, scores: Dict[str, int], peaks: Dict[str, int]):
         sorted_scores = dict(
@@ -99,17 +116,17 @@ class GraphicalEngine(Engine):
             )
 
     def update_tokenboard(self):
-        for name, p in self.players.items():
+        for i, (name, p) in enumerate(self.players.items()):
             self.token_boxes[name].setText(
                 f'<div style="color:{p.color}">&#9632;</div> '
-                f"{name[:config.max_name_length]}: {p.tokens}"
+                f"{name[:config.max_name_length]}: {self.buffers['player_tokens'][i]}"
             )
 
     def run(self):
 
         main_window = qw.QMainWindow()
         main_window.setWindowTitle("Cholerama")
-        main_window.setGeometry(0, 0, 1200, 700)
+        main_window.setGeometry(0, 0, 1280, 800)
 
         # Create a central widget to hold the two widgets
         central_widget = qw.QWidget()
@@ -117,12 +134,12 @@ class GraphicalEngine(Engine):
 
         # Create a layout for the central widget
         layout = qw.QHBoxLayout(central_widget)
-        layout.addWidget(self.graphics.window)
+        layout.addWidget(self.window)
         widget2 = qw.QWidget()
         layout.addWidget(widget2)
         widget2_layout = qw.QVBoxLayout(widget2)
         widget2.setSizePolicy(qw.QSizePolicy.Fixed, qw.QSizePolicy.Preferred)
-        widget2.setMinimumWidth(int(self.graphics.window.width() * 0.08))
+        widget2.setMinimumWidth(int(self.window.width() * 0.08))
         widget2_layout.addWidget(qw.QLabel("<b>Leader board</b>"))
 
         widget2_layout.addWidget(_make_separator())
@@ -164,23 +181,16 @@ class GraphicalEngine(Engine):
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update)
         self.timer.setInterval(1000 // self.fps if self.fps is not None else 0)
+        self.timer.start()
         pg.exec()
+        self.buffers["game_flow"][1] = True
 
     def toggle_pause(self):
         if self.play_button.isChecked():
-            self.timer.start()
+            for outline in self.outlines:
+                outline.setVisible(False)
+            self.buffers["game_flow"][0] = True
             self.play_button.setText("Pause")
         else:
-            self.timer.stop()
+            self.buffers["game_flow"][0] = False
             self.play_button.setText("Play")
-
-    def update(self):
-        self.niter += 1
-        if self.niter > self.iterations:
-            self.shutdown()
-            self.update_leaderboard(*read_scores(self.players.keys(), test=self._test))
-            self.timer.stop()
-            return
-        super().update(self.niter)
-        self.graphics.update(self.board, histories=self.player_histories)
-        self.update_tokenboard()

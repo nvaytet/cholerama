@@ -5,39 +5,43 @@ from typing import Union
 import numpy as np
 
 from . import config
-from .helpers import image_to_array
+from .helpers import image_to_array, Positions
 
 
 class Player:
     def __init__(
-        self, name: str, number: int, color: str, pattern: Union[np.ndarray, str]
+        self, name: str, number: int, color: str, pattern: Union[np.ndarray, str], patch
     ):
         self.name = name
         self.number = number
         self.color = color
         self.peak = 0
+        self.patch = patch
 
-        if isinstance(pattern, str):
-            self.pattern = image_to_array(pattern)
-        else:
-            self.pattern = np.asarray(pattern)
+        self.pattern = pattern
+        if isinstance(self.pattern, str):
+            array = image_to_array(self.pattern)
+            xy = np.where(array > 0)
+            self.pattern = Positions(x=xy[1], y=xy[0])
+        if not isinstance(self.pattern, Positions):
+            raise ValueError("Pattern must be an instance of Positions.")
 
-        if any(np.array(self.pattern.shape) > np.array(config.pattern_size)):
+        if len(self.pattern) > config.initial_tokens:
             raise ValueError(
-                f"Pattern must be contained in size {config.pattern_size}. "
-                f"Got {self.pattern.shape}."
+                f"Too many tokens used in pattern by Player {self.name}: "
+                f"{len(self.pattern)} > {config.initial_tokens}."
             )
 
-        psum = np.sum(self.pattern)
-        if psum > config.initial_tokens:
-            raise ValueError(
-                f"Player {self.name}: pattern has more than "
-                f"{config.initial_tokens} tokens."
-            )
-
-        self.tokens = config.initial_tokens - psum
-        self.ncells = np.sum(self.pattern > 0)
+        patch_size = (config.nx // config.npatches[1], config.ny // config.npatches[0])
+        self.patch_bounds = {
+            "xmin": patch[1] * patch_size[1],
+            "xmax": (patch[1] + 1) * patch_size[1],
+            "ymin": patch[0] * patch_size[0],
+            "ymax": (patch[0] + 1) * patch_size[0],
+        }
+        self.ncells = len(self.pattern)
+        self.tokens = config.initial_tokens - self.ncells
         self.history = []
 
-    def update(self, board: np.ndarray):
-        self.ncells = np.sum(board == self.number)
+    def update(self, ncells: int):
+        self.ncells = ncells

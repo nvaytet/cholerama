@@ -4,7 +4,7 @@ import numpy as np
 from numba import njit, prange
 
 
-@njit(fastmath=True, parallel=True, boundscheck=False, cache=True)
+@njit(boundscheck=False, cache=True, fastmath=True, parallel=True)
 def evolve_board(
     old: np.ndarray,
     new: np.ndarray,
@@ -12,6 +12,7 @@ def evolve_board(
     yoff: np.ndarray,
     neighbors: np.ndarray,
     buffer: np.ndarray,
+    cell_counts: np.ndarray,
     nx: int,
     ny: int,
 ):
@@ -41,3 +42,6 @@ def evolve_board(
                     new[j, i] = buffer[1]
             else:
                 new[j, i] = 0
+
+    # Update cell counts
+    cell_counts[...] = np.bincount(new.ravel())[1:]

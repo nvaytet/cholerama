@@ -8,18 +8,18 @@ from numpy.lib.stride_tricks import sliding_window_view
 from PIL import Image
 
 
-def find_empty_patches(
-    board: np.ndarray, patch_size: Union[int, Tuple[int, int]], skip: int = 8
+def find_empty_regions(
+    board: np.ndarray, size: Union[int, Tuple[int, int]], skip: int = 4
 ) -> np.ndarray:
     """
-    Find all empty patches of a given size in the board.
+    Find all empty regions of a given size in the board.
 
     Parameters:
     ----------
     board : numpy array
         The current state of the board.
-    patch_size : int or tuple
-        The size of the patch to search for.
+    size : int or tuple
+        The size of the region to search for.
     skip : int
         The step size for the sliding window. The larger the faster, but less accurate.
 
@@ -28,9 +28,9 @@ def find_empty_patches(
     numpy array
         The [y, x] indices of the bottom-left corner of each empty patch.
     """
-    if isinstance(patch_size, int):
-        patch_size = (patch_size, patch_size)
-    view = sliding_window_view(board, patch_size)[::skip, ::skip, ...]
+    if isinstance(size, int):
+        size = (size, size)
+    view = sliding_window_view(board, size)[::skip, ::skip, ...]
     return np.argwhere(view.sum((2, 3)) == 0) * skip
 
 
@@ -58,3 +58,10 @@ def image_to_array(image_path: str) -> np.ndarray:
 class Positions:
     x: np.ndarray
     y: np.ndarray
+
+    def __post_init__(self):
+        if len(self.x) != len(self.y):
+            raise ValueError("x and y must have the same length.")
+
+    def __len__(self):
+        return len(self.x)
