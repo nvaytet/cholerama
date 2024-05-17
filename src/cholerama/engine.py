@@ -38,7 +38,12 @@ def setup(bots, iterations, seed=None):
         }
     else:
         dict_of_bots = {
-            bot.AUTHOR: bot.Bot(number=i + 1, name=bot.AUTHOR, patch=patch)
+            bot.AUTHOR: bot.Bot(
+                number=i + 1,
+                name=bot.AUTHOR,
+                patch_location=patch,
+                patch_size=patch_size,
+            )
             for i, (bot, patch) in enumerate(zip(bots, starting_patches))
         }
 

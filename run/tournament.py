@@ -5,7 +5,7 @@ import importlib
 
 import cholerama
 
-bots = [importlib.import_module(f"{repo}") for repo in glob.glob("*_bot")]
+bots = [importlib.import_module(repo) for repo in glob.glob("*_bot")]
 
 cholerama.play(
     bots=bots,  # List of bots to use
