@@ -2,7 +2,6 @@
 
 from .config import config
 from .engine import Engine, setup
-
 from .helpers import Positions
 from .main import play
 from .plot import load, plot

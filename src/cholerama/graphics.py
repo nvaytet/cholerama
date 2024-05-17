@@ -4,7 +4,6 @@ from typing import Dict
 
 import matplotlib.colors as mcolors
 import numpy as np
-
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore
 
@@ -130,7 +129,6 @@ class Graphics:
             )
 
     def run(self):
-
         main_window = qw.QMainWindow()
         main_window.setWindowTitle("Cholerama")
         main_window.setGeometry(0, 0, 1280, 800)

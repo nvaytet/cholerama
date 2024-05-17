@@ -41,7 +41,8 @@ def _print_scores(scores: dict):
     print("\nScores:")
     for i, name in enumerate(sorted_names):
         print(
-            f"{i + 1}. {name}: {sum_scores[name]} (this round: {scores_this_round[name]}) "
+            f"{i + 1}. {name}: {sum_scores[name]} "
+            f"(this round: {scores_this_round[name]}) "
             f"[peak: {max_peaks[name]}]"
         )
 

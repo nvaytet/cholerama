@@ -2,6 +2,7 @@
 
 # import my_bot
 import germ_bot
+
 import cholerama
 
 bots = {

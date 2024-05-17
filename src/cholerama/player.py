@@ -5,7 +5,7 @@ from typing import Union
 import numpy as np
 
 from . import config
-from .helpers import image_to_array, Positions
+from .helpers import Positions, image_to_array
 
 
 class Player:

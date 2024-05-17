@@ -11,11 +11,10 @@ from .helpers import Positions
 from .player import Player
 from .plot import plot
 from .scores import finalize_scores
-from .tools import make_color, array_from_shared_mem, make_starting_positions
+from .tools import array_from_shared_mem, make_color, make_starting_positions
 
 
 def setup(bots, iterations, seed=None):
-
     rng = np.random.default_rng(seed)
     nplayers = len(bots)
 
@@ -214,7 +213,6 @@ class Engine:
 
 
 class GraphicalEngine(Engine):
-
     def __init__(
         self,
         bots: dict,

@@ -4,13 +4,10 @@ import time
 from multiprocessing import Process
 from multiprocessing.managers import SharedMemoryManager
 
-
 import numpy as np
-
 
 from .engine import GraphicalEngine, setup
 from .graphics import Graphics
-
 from .plot import plot
 from .tools import array_from_shared_mem
 
@@ -28,7 +25,6 @@ def spawn_engine(*args):
 def play(
     bots, iterations, seed=None, fps=None, safe=False, test=True, show_results=False
 ):
-
     buffers, players, dict_of_bots = setup(bots=bots, iterations=iterations, seed=seed)
     results = {"board": buffers["board_old"]}
     results.update(
@@ -41,7 +37,6 @@ def play(
 
     shared_arrays = {}
     with SharedMemoryManager() as smm:
-
         shared_buffers = {}
         for key, arr in buffers.items():
             mem = smm.SharedMemory(size=arr.nbytes)
