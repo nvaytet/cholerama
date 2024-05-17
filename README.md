@@ -140,6 +140,7 @@ class Bot:
 
 #### To speed up your runs, you can
 
+- Change the `fps` (exceeding 30 is difficult)
 - Run in `headless` mode start multiple runs simultaneously
 - Use the provided Jupyter notebook
 
