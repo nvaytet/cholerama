@@ -20,7 +20,8 @@ bots = {
 
 cholerama.play(
     bots=bots,  # List of bots to use
-    iterations=400,  # Number of iterations to run
+    iterations=4000,  # Number of iterations to run
     fps=30,  # Frames per second
     show_results=False,  # Display plot of results at the end
+    test=False,
 )

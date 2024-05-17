@@ -20,6 +20,6 @@ bots = {
 
 cholerama.headless(
     bots=bots,  # List of bots to use
-    iterations=100,  # Number of iterations to run
+    iterations=4000,  # Number of iterations to run
     show_results=False,  # Display plot of results at the end
 )

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import time
+from typing import Optional
 
 import numpy as np
 
@@ -220,10 +221,12 @@ class GraphicalEngine(Engine):
         players: dict,
         iterations: int,
         buffers: dict,
+        fps: Optional[int] = None,
         safe: bool = False,
         test: bool = True,
     ):
         self.niter = 0
+
         super().__init__(
             bots=bots,
             players=players,
@@ -234,12 +237,28 @@ class GraphicalEngine(Engine):
                 key: array_from_shared_mem(*value) for key, value in buffers.items()
             },
         )
+        if fps:
+            self.time_delta = 1 / fps
+            self.run = self.run_with_fps
+        else:
+            self.run = self.run_unconstrained
 
-    def run(self):
+    def run_unconstrained(self):
         while self.niter < self.iterations and not self.game_flow[1]:
             if self.game_flow[0]:
                 self.niter += 1
                 self.update(self.niter)
+        print(f"Reached {self.niter} iterations.")
+        self.write_scores()
+        self.game_flow[1] = True
+
+    def run_with_fps(self):
+        last_update = time.time()
+        while self.niter < self.iterations and not self.game_flow[1]:
+            if self.game_flow[0] and (time.time() - last_update > self.time_delta):
+                self.niter += 1
+                self.update(self.niter)
+                last_update = time.time()
         print(f"Reached {self.niter} iterations.")
         self.write_scores()
         self.game_flow[1] = True

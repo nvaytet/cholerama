@@ -53,7 +53,7 @@ def play(
             target=spawn_graphics,
             args=(
                 players,
-                fps,
+                30,
                 test,
                 shared_buffers,
             ),
@@ -66,6 +66,7 @@ def play(
                 players,
                 iterations,
                 shared_buffers,
+                fps,
                 safe,
                 test,
             ),
