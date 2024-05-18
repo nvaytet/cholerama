@@ -42,9 +42,10 @@ class Graphics:
         test,
     ):
         self.players = players
-        self.buffers = {
-            key: array_from_shared_mem(*value) for key, value in buffers.items()
-        }
+        # self.buffers = {
+        #     key: array_from_shared_mem(*value) for key, value in buffers.items()
+        # }
+        self.buffers = buffers
         self.fps = fps
         self._test = test
         self.player_histories = self.buffers["player_histories"]

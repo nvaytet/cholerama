@@ -236,9 +236,10 @@ class GraphicalEngine(Engine):
             iterations=iterations,
             safe=safe,
             test=test,
-            buffers={
-                key: array_from_shared_mem(*value) for key, value in buffers.items()
-            },
+            # buffers={
+            #     key: array_from_shared_mem(*value) for key, value in buffers.items()
+            # },
+            buffers=buffers,
         )
         if fps:
             self.time_delta = 1 / fps

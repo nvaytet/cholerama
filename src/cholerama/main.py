@@ -35,55 +35,58 @@ def play(
     )
     results.update({f"{name}_color": player.color for name, player in players.items()})
 
-    shared_arrays = {}
-    with SharedMemoryManager() as smm:
-        shared_buffers = {}
-        for key, arr in buffers.items():
-            mem = smm.SharedMemory(size=arr.nbytes)
-            shared_arrays[key] = array_from_shared_mem(mem, arr.dtype, arr.shape)
-            shared_arrays[key][...] = arr
-            shared_buffers[key] = (mem, arr.dtype, arr.shape)
+    graphics = Graphics(dict_of_bots, players, iterations, buffers, fps, safe, test)
+    graphics.run()
 
-        graphics = Process(
-            target=spawn_graphics,
-            args=(
-                dict_of_bots,
-                players,
-                iterations,
-                shared_buffers,
-                fps,
-                safe,
-                test,
-                # players,
-                # 30,
-                # test,
-                # shared_buffers,
-            ),
-        )
+    # shared_arrays = {}
+    # with SharedMemoryManager() as smm:
+    #     shared_buffers = {}
+    #     for key, arr in buffers.items():
+    #         mem = smm.SharedMemory(size=arr.nbytes)
+    #         shared_arrays[key] = array_from_shared_mem(mem, arr.dtype, arr.shape)
+    #         shared_arrays[key][...] = arr
+    #         shared_buffers[key] = (mem, arr.dtype, arr.shape)
 
-        # engine = Process(
-        #     target=spawn_engine,
-        #     args=(
-        #         dict_of_bots,
-        #         players,
-        #         iterations,
-        #         shared_buffers,
-        #         fps,
-        #         safe,
-        #         test,
-        #     ),
-        # )
+    #     graphics = Process(
+    #         target=spawn_graphics,
+    #         args=(
+    #             dict_of_bots,
+    #             players,
+    #             iterations,
+    #             shared_buffers,
+    #             fps,
+    #             safe,
+    #             test,
+    #             # players,
+    #             # 30,
+    #             # test,
+    #             # shared_buffers,
+    #         ),
+    #     )
 
-        graphics.start()
-        # engine.start()
-        graphics.join()
-        # engine.join()
+    #     # engine = Process(
+    #     #     target=spawn_engine,
+    #     #     args=(
+    #     #         dict_of_bots,
+    #     #         players,
+    #     #         iterations,
+    #     #         shared_buffers,
+    #     #         fps,
+    #     #         safe,
+    #     #         test,
+    #     #     ),
+    #     # )
 
-        fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
-        results["board"][...] = shared_arrays["board_old"][...]
-        for i, name in enumerate(players):
-            results[f"{name}_history"][...] = shared_arrays["player_histories"][i][...]
+    #     graphics.start()
+    #     # engine.start()
+    #     graphics.join()
+    #     # engine.join()
 
-    np.savez(fname, **results)
-    plot(fname=fname.replace(".npz", ".pdf"), show=show_results, **results)
-    return results
+    # fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
+    # results["board"][...] = shared_arrays["board_old"][...]
+    # for i, name in enumerate(players):
+    #     results[f"{name}_history"][...] = shared_arrays["player_histories"][i][...]
+
+    # np.savez(fname, **results)
+    # plot(fname=fname.replace(".npz", ".pdf"), show=show_results, **results)
+    # return results
