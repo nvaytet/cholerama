@@ -13,6 +13,7 @@ except ImportError:
     from PySide2 import QtWidgets as qw
 
 from . import config
+from .engine import GraphicalEngine
 from .player import Player
 from .scores import read_scores
 from .tools import array_from_shared_mem
@@ -28,10 +29,17 @@ def _make_separator():
 class Graphics:
     def __init__(
         self,
-        players: Dict[str, Player],
-        fps: int,
-        test: bool,
+        # players: Dict[str, Player],
+        # fps: int,
+        # test: bool,
+        # buffers,
+        dict_of_bots,
+        players,
+        iterations,
         buffers,
+        fps,
+        safe,
+        test,
     ):
         self.players = players
         self.buffers = {
@@ -86,12 +94,33 @@ class Graphics:
                 )
             )
         self.window.ci.layout.setColumnMaximumWidth(1, 300)
+        self.niter = 0
+
+        self.engine = GraphicalEngine(
+            dict_of_bots,
+            players,
+            iterations,
+            buffers,
+            fps,
+            safe,
+            test,
+        )
+
+        # dict_of_bots,
+        # players,
+        # iterations,
 
     def update(self):
+        self.niter += 1
+        self.engine.update(self.niter)
         self.image.setImage(self.cmap(self.board.T))
         for i, hist in enumerate(self.player_histories):
             self.lines[i].setData(hist[:], self.xhistory)
         self.update_tokenboard()
+        if self.niter == self.engine.iterations:
+            print(f"Reached {self.niter} iterations.")
+            self.engine.write_scores()
+            self.buffers["game_flow"][1] = True
         if self.buffers["game_flow"][1]:
             self.update_leaderboard(read_scores(self.players.keys(), test=self._test))
             self.timer.stop()

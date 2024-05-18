@@ -47,16 +47,6 @@ def play(
         graphics = Process(
             target=spawn_graphics,
             args=(
-                players,
-                30,
-                test,
-                shared_buffers,
-            ),
-        )
-
-        engine = Process(
-            target=spawn_engine,
-            args=(
                 dict_of_bots,
                 players,
                 iterations,
@@ -64,13 +54,30 @@ def play(
                 fps,
                 safe,
                 test,
+                # players,
+                # 30,
+                # test,
+                # shared_buffers,
             ),
         )
 
+        # engine = Process(
+        #     target=spawn_engine,
+        #     args=(
+        #         dict_of_bots,
+        #         players,
+        #         iterations,
+        #         shared_buffers,
+        #         fps,
+        #         safe,
+        #         test,
+        #     ),
+        # )
+
         graphics.start()
-        engine.start()
+        # engine.start()
         graphics.join()
-        engine.join()
+        # engine.join()
 
         fname = "results-" + time.strftime("%Y%m%d-%H%M%S") + ".npz"
         results["board"][...] = shared_arrays["board_old"][...]
