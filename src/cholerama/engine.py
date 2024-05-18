@@ -101,8 +101,6 @@ class Engine:
 
         self.xoff = np.array([-1, 0, 1, -1, 1, -1, 0, 1])
         self.yoff = np.array([-1, -1, -1, 0, 0, 1, 1, 1])
-        self.neighbors = np.zeros(8, dtype=int)
-        self.neighbor_buffer = np.zeros(3, dtype=int)
 
         # Pre-compile numba function
         evolve_board(
@@ -110,8 +108,6 @@ class Engine:
             self.board_new,
             self.xoff,
             self.yoff,
-            self.neighbors,
-            self.neighbor_buffer,
             self.cell_counts,
             config.nx,
             config.ny,
@@ -179,8 +175,6 @@ class Engine:
             self.board_new,
             self.xoff,
             self.yoff,
-            self.neighbors,
-            self.neighbor_buffer,
             self.cell_counts,
             config.nx,
             config.ny,
