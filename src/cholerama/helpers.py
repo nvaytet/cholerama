@@ -67,7 +67,7 @@ class Positions:
         return len(self.x)
 
 
-def read_rle(fpath):
+def read_rle(fpath: str) -> Positions:
     with open(fpath) as f:
         lines = [line for line in f.readlines() if not line.startswith('#')]
     xs = []
