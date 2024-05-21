@@ -65,3 +65,41 @@ class Positions:
 
     def __len__(self):
         return len(self.x)
+
+
+def read_rle(fpath: str) -> Positions:
+    with open(fpath) as f:
+        lines = [line for line in f.readlines() if not line.startswith('#')]
+    xs = []
+    ys = []
+    digits_next_repeat = ''
+    x = 0
+    y = 0
+    # Skip one line containing bounding box
+    for line in lines[1:]:
+        for c in line:
+            if c in '0123456789':
+                digits_next_repeat += c
+                continue
+            if c in 'bo$':
+                repeat = (
+                    1 if digits_next_repeat == ''
+                    else int(digits_next_repeat)
+                )
+                if c == 'b':
+                    x += repeat 
+                elif c == 'o':
+                    for _ in range(repeat):
+                        xs.append(x)
+                        ys.append(y)
+                        x += 1
+                elif c == '$':
+                    y += repeat
+                    x = 0
+                digits_next_repeat = ''
+            if c == '!':
+                return Positions(
+                    x=np.array(xs, dtype='int'),
+                    y=np.array(ys, dtype='int')
+                )
+    raise ValueError(f'{fpath} is not a well formatted rle file')
