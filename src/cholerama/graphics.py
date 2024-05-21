@@ -74,7 +74,6 @@ class Graphics:
             self.left_view.addItem(self.outlines[-1])
 
         self.right_view = self.window.addPlot(row=None, col=1)
-        self.right_view.setMouseEnabled(x=False)
         self.right_view.setLabel("bottom", text="Number of cells")
         self.right_view.setLabel("left", text="Iterations")
         self.lines = []
